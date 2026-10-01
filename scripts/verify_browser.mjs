@@ -219,6 +219,8 @@ try {
 
   // 5. Keyboard: arrows point the gaze, Escape resets, the reset button resets
   await evaluate(`document.getElementById("portrait-field").focus()`);
+  const captionUI = await evaluate(`document.querySelectorAll(".portrait-caption button, .hero-cue, .portrait-cue").length`);
+  check(captionUI === 0, "layout: no visible caption controls under the portrait", `count=${captionUI}`);
   const key = (type, k, code) => send("Input.dispatchKeyEvent", { type, key: k, code: code || k, windowsVirtualKeyCode: { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Escape: 27 }[k] });
   await key("keyDown", "ArrowLeft"); await key("keyUp", "ArrowLeft");
   check(Boolean(await settle(expectedIndex(meta, 180))), "keyboard: ArrowLeft looks left");
@@ -226,10 +228,6 @@ try {
   check(Boolean(await settle(expectedIndex(meta, 45))), "keyboard: ArrowDown+ArrowRight looks down-right");
   await key("keyDown", "Escape"); await key("keyUp", "Escape");
   check(Boolean(await settle("center")), "keyboard: Escape returns to eye contact");
-  await key("keyDown", "ArrowUp"); await key("keyUp", "ArrowUp");
-  await settle(expectedIndex(meta, -90));
-  await evaluate(`document.getElementById("portrait-reset").click()`);
-  check(Boolean(await settle("center")), "reset button returns to eye contact");
   const focusRing = await evaluate(`(() => { const f = document.getElementById("portrait-field"); return document.activeElement === f && getComputedStyle(f).outlineStyle !== "none"; })()`);
   check(focusRing, "keyboard: portrait shows a visible focus outline");
 
@@ -252,7 +250,7 @@ try {
   await evaluate(`window.scrollTo({ top: document.getElementById("experience").offsetTop, behavior: "instant" })`);
   await sleep(120);
   const flight = await evaluate(`(() => { const t = new DOMMatrix(getComputedStyle(document.getElementById("companion")).transform); return { scale: t.a, handed: document.getElementById("portrait").classList.contains("is-handed-off") }; })()`);
-  check(flight.scale > 1.2 && flight.handed, "mobile scroll: portrait travels from the hero toward the corner (starts large, hero handed off)", JSON.stringify(flight));
+  check(flight.scale > 1.2 && flight.handed, "mobile scroll: portrait and arch travel from the hero toward the corner (start large, hero handed off)", JSON.stringify(flight));
   await sleep(1000);
   p = await portrait();
   const comp = await evaluate(`(() => { const e = document.getElementById("companion"), r = e.getBoundingClientRect(), cs = getComputedStyle(e); return { x: r.left, y: r.top, w: r.width, h: r.height, o: cs.opacity, heroPos: getComputedStyle(document.getElementById("portrait")).position }; })()`);
@@ -260,7 +258,7 @@ try {
     "mobile scroll: companion portrait appears in the lower-right corner", JSON.stringify(comp));
   check(comp.heroPos === "absolute", "mobile scroll: hero portrait stays in the page (not fixed)", comp.heroPos);
   await shot("mobile-companion");
-  const cf = await evaluate(`(() => { const r = document.getElementById("companion-canvas").getBoundingClientRect(); return { x: r.left + r.width * 0.5, y: r.top + r.height * (0.36 / 0.64) }; })()`);
+  const cf = await evaluate(`(() => { const r = document.getElementById("companion-canvas").getBoundingClientRect(); return { x: r.left + r.width * 0.5, y: r.top + r.height * 0.36 }; })()`);
   const meta2 = await evaluate(`fetch("/frames/metadata.json").then(r => r.json())`);
   const touchAt = { x: 30, y: 200 };
   const wantTouch = expectedIndex(meta2, (Math.atan2(touchAt.y - cf.y, touchAt.x - cf.x) * 180) / Math.PI);
@@ -287,7 +285,6 @@ try {
   check(p.mode === "reduced" && p.drawn === "center" && p.loaded === 0, "reduced motion: center only, no ring frames loaded", JSON.stringify(p));
   const anim = await evaluate(`getComputedStyle(document.querySelector(".studio-red")).animationName`);
   check(anim === "none", "reduced motion: studio arch does not breathe", anim);
-  check(await evaluate(`document.getElementById("portrait-reset").hidden`), "reduced motion: reset control hidden");
 
   // 7b. Metadata and center frame present, ring frames absent (404)
   await send("Network.setCacheDisabled", { cacheDisabled: true });
@@ -321,8 +318,6 @@ try {
   check(p.mode === "fallback" && p.drawn === "static", "fallback: approved portrait drawn", JSON.stringify(p));
   check(png, "fallback: lily_stylized_approved.png loads (200)");
   check(/still portrait/i.test(cue) && !/follows/i.test(cue), "fallback: page does not claim animation", `cue="${cue}"`);
-  const resetHidden = await evaluate(`document.getElementById("portrait-reset").hidden`);
-  check(resetHidden, "fallback: reset control hidden");
   await shot("desktop-fallback");
 
   // 8b. Print: a two-page résumé with the headshot
