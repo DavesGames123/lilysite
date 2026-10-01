@@ -71,7 +71,8 @@ function angleToIndex(angle) {
 function setMode(mode, cue) {
   figure.dataset.mode = mode;
   document.body.dataset.portraitMode = mode;
-  field.setAttribute("aria-label", document.getElementById("portrait-alt").textContent);
+  const alt = document.getElementById("portrait-alt")?.textContent;
+  if (alt) field.setAttribute("aria-label", alt);
   if (cue) cues.forEach((el) => { el.textContent = cue; });
 }
 
