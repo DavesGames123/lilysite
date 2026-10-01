@@ -42,12 +42,17 @@ The video frame cuts Lily's hair at its left, right, and bottom edges, and its r
 
 The frames are RGBA WebP, and `metadata.json` records `"alpha": true`. Without Swift, the extractor writes opaque frames. `--no-matte` forces that path, and the page then feathers the rectangle as before.
 
-`surface.js` draws a tall red column behind her, in the exact red of the video background. It rises from above the window, runs behind her head and shoulders, and falls through brown to transparent below her chest. The cutout keeps its original soft edge colors, which came from that same red, so an imperfect mask pixel lands red-on-red and does not show. A fine gold contour runs along the column's sides. The sides breathe slowly and lean toward her gaze. The column belongs to the portrait, so it moves and scales with her. On the phone, the small corner portrait shows only a round red glow. With reduced motion, the surface holds still. This replaces the blurred-copy halo and the page-wide gradient of earlier versions.
+`surface.js` draws the red behind her, in the exact red of the video background. The cutout keeps its original soft edge colors, which came from that same red, so an imperfect mask pixel lands red-on-red and does not show.
+
+- Wide screens (`CornerField`): the red rises from the window's top-right corner and fills the upper-right region. The boundary is a quarter superellipse. Its radii come from the portrait position on every frame, so her silhouette down to the chest stays inside the red. It falls through brown to black, breathes slowly, and carries a fine gold contour.
+- Phones (`LivingSurface`): a flat red column behind the hero portrait. One eased mask on the hero slot fades the red and Lily together into the page.
+
+Both surfaces get their soft edge from a tiny canvas scaled up, not from a CSS blur, which is too heavy on phones. With reduced motion, they hold still.
 
 ## Layout and scroll behavior
 
 - **Wide screens (1024 px and wider).** The portrait is a fixed layer. At the top of the page, its center is at 2/3 of the window width. As the page scrolls through 70% of a window height, the portrait moves to a dock at the right edge at 0.8 scale. The résumé text keeps clear of the dock (`--rail`). The gaze tracks the cursor at all times, and it re-aims when the page scrolls under a still cursor.
-- **Phones and tablets.** The portrait is full-bleed at the top, and the name sits over the dark lower part of the frame. When the face scrolls away, the portrait animates into a small cutout that rises from the lower-right corner on its own surface. It has no frame and no crop. A tap on the framed portrait scrolls to the top. A timed transition does this move, because a scroll-linked fixed layer jitters on iOS.
+- **Phones and tablets.** The hero portrait is full-bleed at the top and stays in the page. It is never fixed and never moves with the scroll. When the face scrolls away, `companion.js` shows a small head-and-shoulders portrait on a round red glow in the lower-right corner. It draws the same frame, so it follows the finger. An IntersectionObserver drives it, and only opacity and transform animate. iOS toolbar resizes do not move it. A tap on it scrolls to the top.
 - **Touch.** Lily follows the finger anywhere on the page, also during a scroll. The touch listeners are passive, so they never block scrolling. After the finger lifts, she returns to eye contact.
 
 ## Print
@@ -62,6 +67,24 @@ The frames are RGBA WebP, and `metadata.json` records `"alpha": true`. Without S
 ## Links
 
 `profile.json` → `links` holds outbound links that come from a real source. At present, that is LinkedIn, which the site owner supplied. `check_site.py` fails on any other social or contact link.
+
+## Hosting (GitHub Pages)
+
+The site deploys like davesgames-site. `.github/workflows/pages.yml` runs on every push to `main`. It runs `scripts/check_site.py`, builds `dist/` with `scripts/build_dist.sh`, and publishes `dist/` to GitHub Pages. `public/CNAME` sets the domain to `lilykubala.com`.
+
+One-time setup:
+
+1. In GitHub, go to the repository Settings, then Pages. Set Source to "GitHub Actions".
+2. Push to `main`, and let the workflow finish.
+3. In the same Pages settings, set Custom domain to `lilykubala.com`.
+4. In Squarespace, open Domains, then lilykubala.com, then DNS. Delete the Squarespace default records for `@` and `www`.
+5. Add these custom records:
+   - `@` A `185.199.108.153`
+   - `@` A `185.199.109.153`
+   - `@` A `185.199.110.153`
+   - `@` A `185.199.111.153`
+   - `www` CNAME `davesgames123.github.io`
+6. After GitHub verifies the domain, select "Enforce HTTPS".
 
 ## Change the résumé content
 
