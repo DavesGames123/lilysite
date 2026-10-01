@@ -1,0 +1,117 @@
+{
+  "name": "Lily Kubala",
+  "title": "Communications Consultant",
+  "about": "Communications Consultant | International Development | Cooperative Development | World Bank Group",
+  "focus": [
+    "International development",
+    "Communications",
+    "Cooperative development"
+  ],
+  "current": {
+    "organization": "International Finance Corporation (IFC)",
+    "parent": "World Bank Group"
+  },
+  "links": [
+    {
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/lily-kubala/",
+      "source": "supplied by the site owner"
+    }
+  ],
+  "experience": [
+    {
+      "role": "Consultant",
+      "organization": "IFC (International Finance Corporation)",
+      "type": "Contract",
+      "dates": "Sep 2024 – Present",
+      "location": "",
+      "points": [],
+      "skills": []
+    },
+    {
+      "role": "Intern",
+      "organization": "U.S. Overseas Cooperative Development Council (OCDC)",
+      "type": "Internship",
+      "dates": "Sep 2023 – Present",
+      "location": "Washington, DC · Remote",
+      "points": [
+        "Researched, compiled, and organized a database of videos about Cooperative Development"
+      ],
+      "skills": [
+        "Attention to Detail",
+        "Research"
+      ]
+    },
+    {
+      "role": "Legal Policy Intern",
+      "organization": "International Cooperative Alliance",
+      "type": "",
+      "dates": "Jun 2023 – Jul 2023",
+      "location": "Brussels · On-site",
+      "points": [
+        "Worked on website design, including creation of graphics and organization of content",
+        "Researched news and legal documentation to create a database for cooperatives worldwide",
+        "Wrote op-eds on cooperative education and sustainable development",
+        "Took initiative on related social media strategy, office organization, and event planning work"
+      ],
+      "skills": []
+    },
+    {
+      "role": "Assistant File Clerk",
+      "organization": "Pahl & McCay",
+      "type": "",
+      "dates": "Jun 2021 – Aug 2021",
+      "location": "Santa Monica, California",
+      "points": [
+        "Organized packets of documents and filed them"
+      ],
+      "skills": []
+    }
+  ],
+  "education": {
+    "school": "University of Southern California",
+    "dates": "2020 – 2024",
+    "studies": [
+      "International Relations",
+      "Middle East Studies"
+    ],
+    "details": [
+      "GPA: 3.7",
+      "Alpha Lambda Delta Honor Society",
+      "Trustee Scholarship recipient; awarded to 100 students",
+      "Dean’s List"
+    ]
+  },
+  "volunteering": [
+    {
+      "role": "Senior Coalition Coordinator, Charlotte Chapter",
+      "organization": "RepresentUs",
+      "dates": "Mar 2019 – Feb 2020",
+      "points": [
+        "Wrote, submitted, and presented a resolution to Charlotte City Council to end gerrymandering in North Carolina",
+        "Scheduled meetings, organized events, and ran the chapter Instagram page",
+        "Reached out to, met with, and influenced City Council members"
+      ]
+    },
+    {
+      "role": "Researcher",
+      "organization": "Near Crisis Project",
+      "dates": "Jan 2022 – May 2022",
+      "points": [
+        "Researched instances of near crises throughout history",
+        "Wrote reports evaluating those instances"
+      ]
+    }
+  ],
+  "skills": [
+    "Basic Arabic",
+    "Research",
+    "Written Communication",
+    "Oral Communication",
+    "Teamwork",
+    "Attention to Detail"
+  ],
+  "honors": [
+    "Girl Scout Silver Award"
+  ]
+}
