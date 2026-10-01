@@ -217,10 +217,12 @@ html::after {
     -webkit-mask-image: var(--fade);
     mask-image: var(--fade);
   }
+  /* Phone portrait size: about 3/4 of the width, capped at 58% of the screen height. */
+  .hero { --slot-w: min(76vw, calc(58svh * 0.5625)); }
   .portrait { position: absolute; top: 0; left: calc(50% - var(--slot-w) / 2); width: var(--slot-w); }
   .portrait-field { height: var(--slot-h); }
   .hero-copy {
-    margin-top: calc(var(--slot-h) * -0.2);
+    margin-top: calc(var(--slot-h) * -0.14);
     padding: 0 var(--gutter);
     width: 100%; max-width: 680px; align-self: center;
   }
@@ -462,8 +464,8 @@ html::after {
     display: block; position: fixed; z-index: 40;
     right: calc(12px + env(safe-area-inset-right));
     bottom: calc(4px + env(safe-area-inset-bottom));
-    width: 158px; aspect-ratio: 9 / 16;
-    --studio-w: 158px;
+    width: 124px; aspect-ratio: 9 / 16;
+    --studio-w: 124px;
     transform-origin: 0 0;
     opacity: 0; visibility: hidden; pointer-events: none; cursor: pointer;
     -webkit-tap-highlight-color: transparent;

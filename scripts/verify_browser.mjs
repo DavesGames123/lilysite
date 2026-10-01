@@ -246,7 +246,7 @@ try {
   await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   check(Boolean(await settle("center")), "touch: lifting the finger returns to eye contact");
   const mr = await fieldRect();
-  check(Math.abs(mr.w - 390) < 1 && mr.y + mr.h * 0.36 < 844 * 0.5, "mobile: full-bleed portrait, face in the top half of the first screen", `w=${mr.w.toFixed(0)} faceY=${(mr.y + mr.h * 0.36).toFixed(0)}`);
+  check(mr.y + mr.h * 0.36 < 844 * 0.5, "mobile: portrait face in the top half of the first screen", `w=${mr.w.toFixed(0)} faceY=${(mr.y + mr.h * 0.36).toFixed(0)}`);
   await evaluate(`window.scrollTo({ top: document.getElementById("experience").offsetTop, behavior: "instant" })`);
   await sleep(120);
   const flight = await evaluate(`(() => { const t = new DOMMatrix(getComputedStyle(document.getElementById("companion")).transform); return { scale: t.a, handed: document.getElementById("portrait").classList.contains("is-handed-off") }; })()`);
