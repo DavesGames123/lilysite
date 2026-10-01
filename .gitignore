@@ -1,0 +1,23 @@
+# Build output
+dist/
+
+# Source video: about 7 MB, and the page does not load it. Keep a local copy at
+# public/character.mp4 to run scripts/extract_video_frames.py again.
+public/character.mp4
+
+# Original identity photos of a real person: not for a public repository
+assets/references/lily_original_*.jpg
+
+# Rejected and unused image sets from earlier approaches
+assets/failed_attempts/
+assets/views/
+assets/anchors/
+output/
+public/assets/lily/lily_rig_*.png
+public/assets/lily/views/
+public/assets/lily/manifest.json
+
+# Tooling
+__pycache__/
+*.pyc
+.DS_Store

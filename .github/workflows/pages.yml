@@ -1,0 +1,37 @@
+# Build and deploy lilykubala.com to GitHub Pages.
+# The job runs the static checks, builds dist/ (only the files the page uses),
+# and publishes dist/. Requires Settings > Pages > Source = "GitHub Actions".
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static checks (facts, contact, transforms, frames)
+        run: python3 scripts/check_site.py
+      - name: Build dist/
+        run: bash scripts/build_dist.sh
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
