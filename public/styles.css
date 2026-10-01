@@ -23,7 +23,7 @@
   --gutter: clamp(20px, 5vw, 72px);
   --measure: 1120px;
   /* portrait geometry: --pw is the width of the 9:16 field on wide screens */
-  --pw: calc(min(78svh, 840px) * 0.5625);
+  --pw: calc(min(86svh, 920px) * 0.5625);
   --dock-scale: 0.8;
   --dock-gap: clamp(24px, 3.5vw, 56px);
   --rail: calc(var(--pw) * var(--dock-scale) + var(--dock-gap) * 2);
@@ -118,14 +118,36 @@ h1 em { font-style: italic; color: var(--gold-light); }
   position: relative; display: block; width: 100%; aspect-ratio: 9 / 16;
   outline-offset: 10px; -webkit-tap-highlight-color: transparent;
 }
-/* Living surface (surface.js): a tall red column and a gold contour behind the
-   cutout. The box spans x -0.6..1.6 and y -1.1..1.1 of the field. */
-.portrait-surface, .portrait-contour {
+/* Studio red: a soft arch of the video's red just behind her head and hair,
+   down to the chest. Her cutout's soft edge pixels came from that red, so they
+   land red-on-red. The arch is blurred once by the browser at full resolution;
+   its breathing animates transform only, so the blur never redraws. */
+.studio-red {
   position: absolute; pointer-events: none;
-  left: -60%; width: 220%;
-  top: -110%; height: 220%;
+  left: -6%; right: -6%; top: -5%; bottom: 12%;
+  background: var(--red-field);
+  border-radius: 50% 50% 16% 16% / 27% 27% 9% 9%;
+  filter: blur(calc(var(--studio-w, 400px) * 0.035));
+  -webkit-mask-image: linear-gradient(to bottom, #000 66%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 66%, transparent 100%);
+  animation: studio-breathe 11s ease-in-out infinite;
+  transform-origin: 50% 40%;
 }
-.portrait-contour { overflow: visible; }
+@keyframes studio-breathe { 50% { transform: scale(1.018, 1.008); } }
+/* A dim brown falloff around the arch, so the red meets the black softly. */
+.studio-ambient {
+  position: absolute; pointer-events: none;
+  left: -48%; right: -48%; top: -22%; bottom: -8%;
+  background: radial-gradient(closest-side at 50% 40%,
+    rgba(142, 34, 20, 0.42) 0%, rgba(110, 30, 18, 0.3) 38%, rgba(77, 26, 16, 0.17) 62%,
+    rgba(29, 15, 11, 0.07) 82%, transparent 100%);
+}
+/* Fine noise over the page dithers the dark gradients, so they show no bands. */
+html::after {
+  content: ""; position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media print { html::after { display: none; } }
 /* Front layer: the cutout frames (alpha). Nothing frames or masks them. */
 .portrait-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 /* Opaque frames (no matte, or the still fallback): feather the rectangle. */
@@ -186,16 +208,8 @@ h1 em { font-style: italic; color: var(--gold-light); }
     background-size: calc(100% - var(--rail) + var(--dock-gap)) 1px;
   }
   main .section-profile { background-image: none; }
-  /* The red comes from the window's top-right corner (CornerField), not from
-     the portrait's own column. */
-  .portrait-surface, .portrait-contour { display: none; }
+  .portrait { --studio-w: var(--pw); }
 }
-
-/* Corner field (wide screens): fixed, behind all content. */
-.page-surface { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-.page-surface canvas, .page-surface svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.page-contour { overflow: visible; }
-@media (max-width: 1023.98px) { .page-surface { display: none; } }
 
 /* ---------- stacked layout (phones and tablets) ----------
    The hero portrait is full-bleed at the top of the page, in front of a flat
@@ -456,32 +470,35 @@ h1 em { font-style: italic; color: var(--gold-light); }
 }
 
 /* ---------- companion portrait (phones and tablets) ----------
-   companion.js toggles .is-visible. Only opacity and transform animate. */
+   companion.js places it over the hero crop, then animates transform to
+   none (the corner), and back. transform-origin is 0 0 for that math. */
 .companion { display: none; }
 @media (max-width: 1023.98px) {
+  .portrait { --studio-w: var(--slot-w); }
+  /* Inside the screen edges, so the phone also shows black around the arch. */
+  .studio-red { left: 5%; right: 5%; top: 2%; }
+  .portrait.is-handed-off .portrait-canvas { visibility: hidden; }
   .companion {
     display: block; position: fixed; z-index: 40;
     right: calc(16px + env(safe-area-inset-right));
     bottom: calc(18px + env(safe-area-inset-bottom));
     width: 104px; aspect-ratio: 248 / 336;
-    opacity: 0; transform: translateY(22px) scale(0.78);
-    transform-origin: 70% 85%;
-    transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.2, 1.3, 0.35, 1);
-    pointer-events: none; cursor: pointer;
+    transform-origin: 0 0;
+    opacity: 0; visibility: hidden; pointer-events: none; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .companion.is-visible { opacity: 1; transform: none; pointer-events: auto; }
+  .companion.is-visible { opacity: 1; visibility: visible; pointer-events: auto; }
+  .companion.is-travelling { transition: transform 0.65s cubic-bezier(0.3, 0.75, 0.2, 1); }
   .companion:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 6px; border-radius: 50%; }
-  /* Round red glow, flat in the middle: the cutout's soft edge lands red-on-red. */
+  /* Round glow, red only at the center: the cutout's soft edge lands on red. */
   .companion-glow {
-    position: absolute; inset: -30% -42% -18%;
+    position: absolute; inset: -26% -36% -14%;
     border-radius: 50%;
     background: radial-gradient(closest-side,
-      var(--red-field) 0%, var(--red-field) 54%, rgba(142, 34, 20, 0.8) 70%,
-      rgba(77, 26, 16, 0.35) 85%, transparent 100%);
-    animation: glow-breathe 7s ease-in-out infinite;
+      var(--red-field) 0%, var(--red-field) 42%, rgba(142, 34, 20, 0.6) 62%,
+      rgba(77, 26, 16, 0.22) 82%, transparent 100%);
+    animation: studio-breathe 11s ease-in-out infinite;
   }
-  @keyframes glow-breathe { 50% { transform: scale(1.05); } }
   .companion-canvas {
     position: absolute; inset: 0; width: 100%; height: 100%;
     -webkit-mask-image: radial-gradient(64% 60% at 50% 44%, #000 64%, transparent 100%);

@@ -18,10 +18,6 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="page-surface" aria-hidden="true">
-      <canvas id="page-surface-canvas"></canvas>
-      <svg class="page-contour" preserveAspectRatio="none"><path id="page-contour-path" d="" fill="none" stroke="#d8b578" stroke-opacity="0.55" stroke-width="1.2" vector-effect="non-scaling-stroke" /></svg>
-    </div>
     <a class="skip-link" href="#main">Skip to résumé</a>
 
     <header class="masthead">
@@ -63,18 +59,8 @@
       <div class="portrait-face-sentinel" id="portrait-face" aria-hidden="true"></div>
       <figure class="portrait" id="portrait" data-mode="loading">
         <div class="portrait-field" id="portrait-field" tabindex="0" role="group" aria-roledescription="interactive portrait" aria-label="Portrait of Lily Kubala" aria-describedby="portrait-help">
-          <canvas class="portrait-surface" id="portrait-surface" width="144" height="256" aria-hidden="true"></canvas>
-          <svg class="portrait-contour" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="contour-fade" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0.4" stop-color="#d8b578" stop-opacity="0.55" />
-                <stop offset="0.66" stop-color="#d8b578" stop-opacity="0.7" />
-                <stop offset="0.78" stop-color="#d8b578" stop-opacity="0.35" />
-                <stop offset="0.88" stop-color="#d8b578" stop-opacity="0" />
-              </linearGradient>
-            </defs>
-            <path id="portrait-contour-path" d="" fill="none" stroke="url(#contour-fade)" stroke-width="1.2" vector-effect="non-scaling-stroke" />
-          </svg>
+          <span class="studio-ambient" aria-hidden="true"></span>
+          <span class="studio-red" aria-hidden="true"></span>
           <canvas class="portrait-canvas" id="portrait-canvas" aria-hidden="true"></canvas>
           <span class="visually-hidden" id="portrait-alt">Stylized portrait of Lily Kubala in a navy turtleneck with a gold pendant, against a vivid red background.</span>
         </div>

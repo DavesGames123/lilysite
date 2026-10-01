@@ -15,7 +15,6 @@ import { FrameStore, decodeImage, loadManifest } from "./manifest.js";
 import { PointerController } from "./controller.js";
 import { PortraitRenderer } from "./renderer.js";
 import { ScrollStage } from "./stage.js";
-import { CornerField, LivingSurface } from "./surface.js";
 import { Companion } from "./companion.js";
 
 const APPROVED_PORTRAIT = "/assets/lily/lily_stylized_approved.png";
@@ -29,29 +28,13 @@ const cues = document.querySelectorAll("[data-portrait-cue]");
 const resetButton = document.getElementById("portrait-reset");
 const renderer = new PortraitRenderer(document.getElementById("portrait-canvas"), null);
 const css = getComputedStyle(document.documentElement);
-const colors = {
-  red: css.getPropertyValue("--red-field").trim() || "rgb(212,30,18)",
-  brown1: css.getPropertyValue("--brown-1").trim() || "#8e2214",
-  brown2: css.getPropertyValue("--brown-2").trim() || "#4d1a10",
-  brown3: css.getPropertyValue("--brown-3").trim() || "#1d0f0b",
-};
-// Phones: a red column behind the hero portrait. Wide screens: red from the
-// top-right corner of the window. CSS shows one of the two.
-const surface = new LivingSurface({
-  canvas: document.getElementById("portrait-surface"),
-  contour: document.getElementById("portrait-contour-path"),
-  colors,
-});
-const corner = new CornerField({
-  canvas: document.getElementById("page-surface-canvas"),
-  contour: document.getElementById("page-contour-path"),
-  colors,
-});
 const companion = new Companion({
   root: document.getElementById("companion"),
   canvas: document.getElementById("companion-canvas"),
   faceTarget: document.getElementById("portrait-face"),
   faceCenter: RING_FACE,
+  heroField: field,
+  heroFigure: figure,
 });
 // Every frame the hero canvas draws also goes to the companion (the same
 // single frame, cropped), so the small portrait follows the finger too.
@@ -96,10 +79,7 @@ function setMode(mode, cue) {
 const stage = new ScrollStage({
   figure,
   field,
-  onMove: (rect) => {
-    state.controller?.refresh();
-    corner.setPortrait(rect);
-  },
+  onMove: () => state.controller?.refresh(),
 });
 
 function drawCenter() {
@@ -145,8 +125,6 @@ function queueBackground() {
 }
 
 function onTarget(target) {
-  surface.setGaze(target.center ? null : target.angle);
-  corner.setGaze(target.center ? null : target.angle);
   if (!target.center) queueBackground();
   if (target.center) {
     state.center = true;
@@ -224,8 +202,6 @@ async function start() {
   if (ring.background) {
     const red = `rgb(${ring.background.join(",")})`;
     document.documentElement.style.setProperty("--red-field", red);
-    surface.setColors({ red });
-    corner.setColors({ red });
   }
   figure.dataset.alpha = ring.meta.alpha ? "true" : "false";
   companion.faceCenter = ring.faceCenter;
