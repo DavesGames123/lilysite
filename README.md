@@ -20,8 +20,8 @@ public/js/main.js             portrait player: modes, angle smoothing, frame sel
 public/js/manifest.js         loads frames/metadata.json; FrameStore preload queue
 public/js/renderer.js         canvas renderer: one frame per draw, 100% opacity
 public/js/controller.js       pointer, touch, and keyboard input -> target angle
-public/js/stage.js            scroll stage: portrait position, small phone portrait
-public/js/surface.js          living surface: organic red-brown field and animated gold contour
+public/js/stage.js            wide screens: the portrait at 2/3 of the width, docking at the right edge
+public/js/companion.js        phones: the portrait travels into the corner when the hero face scrolls away
 public/character.mp4          source video, 1080x1920, 24 fps, 239 frames
 public/frames/                frame_000.webp ... frame_063.webp, metadata.json
 public/center.webp            frontal frame with direct eye contact
@@ -42,17 +42,12 @@ The video frame cuts Lily's hair at its left, right, and bottom edges, and its r
 
 The frames are RGBA WebP, and `metadata.json` records `"alpha": true`. Without Swift, the extractor writes opaque frames. `--no-matte` forces that path, and the page then feathers the rectangle as before.
 
-`surface.js` draws the red behind her, in the exact red of the video background. The cutout keeps its original soft edge colors, which came from that same red, so an imperfect mask pixel lands red-on-red and does not show.
-
-- Wide screens (`CornerField`): the red rises from the window's top-right corner and fills the upper-right region. The boundary is a quarter superellipse. Its radii come from the portrait position on every frame, so her silhouette down to the chest stays inside the red. It falls through brown to black, breathes slowly, and carries a fine gold contour.
-- Phones (`LivingSurface`): a flat red column behind the hero portrait. One eased mask on the hero slot fades the red and Lily together into the page.
-
-Both surfaces get their soft edge from a tiny canvas scaled up, not from a CSS blur, which is too heavy on phones. With reduced motion, they hold still.
+The red behind her is a studio arch: a soft CSS arch in the exact red of the video background, just behind her head and hair, down to the chest. A dim brown falloff surrounds it, and the rest of the page is black. The cutout keeps its original soft edge colors, which came from that same red, so an imperfect mask pixel lands red-on-red. The browser blurs the arch once at full resolution, and its slow breathing animates transform only. A faint noise layer over the page dithers the dark gradients, so they show no bands.
 
 ## Layout and scroll behavior
 
-- **Wide screens (1024 px and wider).** The portrait is a fixed layer. At the top of the page, its center is at 2/3 of the window width. As the page scrolls through 70% of a window height, the portrait moves to a dock at the right edge at 0.8 scale. The résumé text keeps clear of the dock (`--rail`). The gaze tracks the cursor at all times, and it re-aims when the page scrolls under a still cursor.
-- **Phones and tablets.** The hero portrait is full-bleed at the top and stays in the page. It is never fixed and never moves with the scroll. When the face scrolls away, `companion.js` shows a small head-and-shoulders portrait on a round red glow in the lower-right corner. It draws the same frame, so it follows the finger. An IntersectionObserver drives it, and only opacity and transform animate. iOS toolbar resizes do not move it. A tap on it scrolls to the top.
+- **Wide screens (1024 px and wider).** The portrait is a fixed layer. At the top of the page, its center is at 2/3 of the window width. As the page scrolls through 70% of a window height, the portrait moves to a dock at the right edge at 0.8 scale. The résumé text keeps clear of the dock (`--rail`). The portrait is 86% of the window height. The gaze tracks the cursor at all times, and it re-aims when the page scrolls under a still cursor.
+- **Phones and tablets.** The hero portrait is full-bleed at the top and stays in the page. When the face scrolls away, the portrait travels into the lower-right corner. `companion.js` puts a small portrait exactly over the hero's head and shoulders, hides the hero canvas, then animates the small portrait into the corner. When the face comes back, it travels back and the hero canvas shows again. Both draw the same frame, so the small portrait follows the finger. An IntersectionObserver drives the move, and only transform and opacity animate, so iOS toolbar resizes do not move it. A tap on the small portrait scrolls to the top.
 - **Touch.** Lily follows the finger anywhere on the page, also during a scroll. The touch listeners are passive, so they never block scrolling. After the finger lifts, she returns to eye contact.
 
 ## Print
