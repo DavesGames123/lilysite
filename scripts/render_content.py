@@ -50,12 +50,27 @@ def render_focus(data: dict) -> str:
     return f'<ul class="focus-list">\n{items}\n</ul>'
 
 
+# Brand marks for outbound links, drawn inline (24x24 viewBox, single color).
+LOGOS = {
+    "LinkedIn": "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
+}
+
+
 def render_links(data: dict) -> str:
-    items = "\n".join(
-        f'  <a class="link-out" href="{e(link["url"])}" target="_blank" rel="noopener">{e(link["label"])}<span aria-hidden="true"> ↗</span><span class="visually-hidden"> (opens in a new tab)</span></a>'
-        for link in data.get("links", [])
-    )
-    return f'<p class="hero-links">\n{items}\n</p>'
+    items = []
+    for link in data.get("links", []):
+        label = link["label"]
+        if label in LOGOS:
+            items.append(
+                f'  <a class="link-logo link-logo-{e(label.lower())}" href="{e(link["url"])}" target="_blank" rel="noopener" '
+                f'aria-label="{e(data["name"])} on {e(label)} (opens in a new tab)">'
+                f'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="{LOGOS[label]}" /></svg></a>'
+            )
+        else:
+            items.append(
+                f'  <a class="link-out" href="{e(link["url"])}" target="_blank" rel="noopener">{e(label)}<span aria-hidden="true"> ↗</span><span class="visually-hidden"> (opens in a new tab)</span></a>'
+            )
+    return '<p class="hero-links">\n' + "\n".join(items) + "\n</p>"
 
 
 def render_footer_links(data: dict) -> str:
