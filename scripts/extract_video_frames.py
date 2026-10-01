@@ -58,11 +58,6 @@ KEYFRAMES: list[tuple[int, float]] = [
     (180, -450.0),
 ]
 RING_START_DEG = -90.0
-# Recorded transition between the ring's "up" pose and eye contact: in the
-# order 17 down to 6, the head drops from up (next to ring frame 18) to the
-# camera. The runtime plays them to return to eye contact,
-# and forward to leave it. Their scale matches the ring and frame 232.
-RETURN_SOURCE_FRAMES = list(range(17, 5, -1))
 CENTER_SOURCE_FRAME = 232
 FACE_CENTER_NORMALIZED = (0.5, 0.36)
 DEADZONE_FRACTION_OF_RADIUS = 0.12
@@ -130,7 +125,7 @@ def main() -> int:
     out_w = min(args.width, width)
     out_h = int(round(out_w * height / width))
     args.output.mkdir(parents=True, exist_ok=True)
-    for old in list(args.output.glob("frame_*.webp")) + list(args.output.glob("return_*.webp")) + [args.output / "center.webp"]:
+    for old in list(args.output.glob("frame_*.webp")) + [args.output / "center.webp"]:
         old.unlink(missing_ok=True)
 
     step = 360.0 / args.count
@@ -143,11 +138,6 @@ def main() -> int:
         images[f"ring{i:03d}"] = read_frame(capture, source)
         screen = ((angle + 180.0) % 360.0) - 180.0
         frames.append({"index": i, "source_frame": source, "angle_degrees": round(screen, 3), "filename": filename})
-    returns: list[dict] = []
-    for i, source in enumerate(RETURN_SOURCE_FRAMES):
-        filename = f"return_{i:02d}.webp"
-        images[f"return{i:02d}"] = read_frame(capture, source)
-        returns.append({"index": i, "source_frame": source, "filename": filename})
     images["center"] = read_frame(capture, args.center_frame)
     background = sample_background(images["center"])
     capture.release()
@@ -162,8 +152,6 @@ def main() -> int:
     total_bytes = 0
     for i, f in enumerate(frames):
         total_bytes += write_webp(args.output / f["filename"], images[f"ring{i:03d}"], (out_w, out_h), args.quality)
-    for r in returns:
-        total_bytes += write_webp(args.output / r["filename"], images[f"return{r['index']:02d}"], (out_w, out_h), args.quality)
     total_bytes += write_webp(args.center_output, images["center"], (out_w, out_h), min(100, args.quality + 6))
 
     metadata = {
@@ -189,11 +177,6 @@ def main() -> int:
         "alpha": use_matte,
         "matte": {"tool": "macOS Vision VNGenerateForegroundInstanceMaskRequest", "side_ramp": matte.SIDE_RAMP, "bottom_ramp": matte.BOTTOM_RAMP} if use_matte else None,
         "frames": frames,
-        "return_sequence": {
-            "note": "from the ring's up pose (index 0) to eye contact; play in reverse to leave eye contact",
-            "joins_ring_index": 0,
-            "frames": returns,
-        },
     }
     (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({
@@ -201,7 +184,6 @@ def main() -> int:
         "output": [out_w, out_h],
         "frames": args.count,
         "unique_source_frames": len({f["source_frame"] for f in frames}),
-        "return_frames": len(returns),
         "center_source_frame": args.center_frame,
         "background_rgb": background,
         "alpha": use_matte,
