@@ -119,8 +119,8 @@ h1 em { font-style: italic; color: var(--gold-light); }
 }
 /* Studio red: a soft arch of the video's red just behind her head and hair,
    down to the chest. Her cutout's soft edge pixels came from that red, so they
-   land red-on-red. The arch is blurred once by the browser at full resolution;
-   its breathing animates transform only, so the blur never redraws. */
+   land red-on-red. The arch is static; the browser blurs it once at full
+   resolution. */
 .studio-red {
   position: absolute; pointer-events: none;
   left: -6%; right: -6%; top: -5%; bottom: 12%;
@@ -129,10 +129,7 @@ h1 em { font-style: italic; color: var(--gold-light); }
   filter: blur(calc(var(--studio-w, 400px) * 0.035));
   -webkit-mask-image: linear-gradient(to bottom, #000 66%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 66%, transparent 100%);
-  animation: studio-breathe 11s ease-in-out infinite;
-  transform-origin: 50% 40%;
 }
-@keyframes studio-breathe { 50% { transform: scale(1.018, 1.008); } }
 /* A dim brown falloff around the arch, so the red meets the black softly. */
 .studio-ambient {
   position: absolute; pointer-events: none;

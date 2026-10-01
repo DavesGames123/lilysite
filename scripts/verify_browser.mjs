@@ -159,6 +159,8 @@ try {
     return { covers: r.left < f.left && r.right > f.right && r.top < f.top, bg: cs.backgroundColor, body: getComputedStyle(document.documentElement).backgroundColor };
   })()`);
   check(studio.covers && /212, 30, 18/.test(studio.bg) && /11, 10, 13/.test(studio.body), "studio: red arch behind the silhouette, black page", JSON.stringify(studio));
+  const anims = await evaluate(`document.getAnimations().map(a => a.animationName || a.constructor.name)`);
+  check(anims.length === 0, "motion: no CSS animations run (only the cursor drives the portrait)", JSON.stringify(anims));
   await shot("desktop-hero");
 
   // 2. Pointer direction maps to the expected ring frame
@@ -283,8 +285,6 @@ try {
   await sleep(500);
   p = await portrait();
   check(p.mode === "reduced" && p.drawn === "center" && p.loaded === 0, "reduced motion: center only, no ring frames loaded", JSON.stringify(p));
-  const anim = await evaluate(`getComputedStyle(document.querySelector(".studio-red")).animationName`);
-  check(anim === "none", "reduced motion: studio arch does not breathe", anim);
 
   // 7b. Metadata and center frame present, ring frames absent (404)
   await send("Network.setCacheDisabled", { cacheDisabled: true });
