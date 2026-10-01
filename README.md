@@ -1,0 +1,123 @@
+# Lily Kubala — résumé site
+
+This is a static, single-page résumé with an interactive portrait. The portrait is a 64-frame ring that the extractor takes from one character video before runtime. A canvas shows one frame at a time. The cursor angle around Lily's face selects the frame.
+
+## Run the site
+
+```bash
+python3 -m http.server 4173 -d public
+```
+
+Open `http://localhost:4173/`. To see the static fallback, open `http://localhost:4173/?portrait=static`.
+
+## Layout
+
+```
+content/profile.json          résumé facts (the only content source)
+public/index.html             layout; render:* regions come from profile.json
+public/styles.css             visual system, portrait edge treatment, print styles
+public/js/main.js             portrait player: modes, angle smoothing, frame selection
+public/js/manifest.js         loads frames/metadata.json; FrameStore preload queue
+public/js/renderer.js         canvas renderer: one frame per draw, 100% opacity
+public/js/controller.js       pointer, touch, and keyboard input -> target angle
+public/js/stage.js            scroll stage: portrait position, small phone portrait
+public/js/surface.js          living surface: organic red-brown field and animated gold contour
+public/character.mp4          source video, 1080x1920, 24 fps, 239 frames
+public/frames/                frame_000.webp ... frame_063.webp, metadata.json
+public/center.webp            frontal frame with direct eye contact
+scripts/extract_video_frames.py   video -> cutout frames, center.webp, metadata.json
+scripts/matte/                Vision subject-lift mask tool (Swift) and cutout clean-up (matte.py)
+scripts/render_content.py     profile.json -> index.html render regions
+scripts/check_site.py         static checks (facts, contact, transforms, frames)
+scripts/verify_browser.mjs    headless Chrome checks (input, modes, layout)
+```
+
+## Cutout frames and the living surface
+
+The video frame cuts Lily's hair at its left, right, and bottom edges, and its red background is not even. A feather over the frame rectangle therefore always shows as a soft box. For this reason, the extractor removes the background from every frame:
+
+1. `scripts/matte/lift_mask.swift` gets a soft mask from the macOS Vision subject-lift model.
+2. `scripts/matte/matte.py` keeps the soft mask and the original edge colors (default mode). A `clean` mode exists for a background that is not red: it tightens the edge, extends interior colors into it, and limits red rim light.
+3. Alpha falls to 0 over the last 7% of each side and the last 16% of the bottom, where the video frame cuts the hair.
+
+The frames are RGBA WebP, and `metadata.json` records `"alpha": true`. Without Swift, the extractor writes opaque frames. `--no-matte` forces that path, and the page then feathers the rectangle as before.
+
+`surface.js` draws a tall red column behind her, in the exact red of the video background. It rises from above the window, runs behind her head and shoulders, and falls through brown to transparent below her chest. The cutout keeps its original soft edge colors, which came from that same red, so an imperfect mask pixel lands red-on-red and does not show. A fine gold contour runs along the column's sides. The sides breathe slowly and lean toward her gaze. The column belongs to the portrait, so it moves and scales with her. On the phone, the small corner portrait shows only a round red glow. With reduced motion, the surface holds still. This replaces the blurred-copy halo and the page-wide gradient of earlier versions.
+
+## Layout and scroll behavior
+
+- **Wide screens (1024 px and wider).** The portrait is a fixed layer. At the top of the page, its center is at 2/3 of the window width. As the page scrolls through 70% of a window height, the portrait moves to a dock at the right edge at 0.8 scale. The résumé text keeps clear of the dock (`--rail`). The gaze tracks the cursor at all times, and it re-aims when the page scrolls under a still cursor.
+- **Phones and tablets.** The portrait is full-bleed at the top, and the name sits over the dark lower part of the frame. When the face scrolls away, the portrait animates into a small cutout that rises from the lower-right corner on its own surface. It has no frame and no crop. A tap on the framed portrait scrolls to the top. A timed transition does this move, because a scroll-linked fixed layer jitters on iOS.
+- **Touch.** Lily follows the finger anywhere on the page, also during a scroll. The touch listeners are passive, so they never block scrolling. After the finger lifts, she returns to eye contact.
+
+## Print
+
+"Print résumé" (`window.print()`) prints a two-page US Letter résumé, not the screen layout. `render_content.py` writes the `.print-sheet` block from `profile.json`. Only `@media print` shows it.
+
+- Page 1: the name, the about line, a headshot from `center.webp`, the profile facts, and the experience timeline.
+- Page 2: education, volunteering, and a red panel with skills, honors, LinkedIn, and the full portrait.
+
+`verify_browser.mjs` prints the page to PDF and checks that it has exactly 2 pages.
+
+## Links
+
+`profile.json` → `links` holds outbound links that come from a real source. At present, that is LinkedIn, which the site owner supplied. `check_site.py` fails on any other social or contact link.
+
+## Change the résumé content
+
+1. Edit `content/profile.json`. Use only facts from a real source.
+2. Run `python3 scripts/render_content.py`.
+3. Run `python3 scripts/check_site.py`.
+
+The page is static HTML, so the résumé reads and prints without JavaScript.
+
+## Replace the character video and extract frames
+
+1. Copy the new video to `public/character.mp4`. The video must be 9:16.
+2. Install the requirements: `python3 -m pip install -r requirements.txt`.
+3. Make a contact sheet and find the frames where the head points up, left, down, and right.
+4. Edit `KEYFRAMES` and `CENTER_SOURCE_FRAME` at the top of `scripts/extract_video_frames.py`.
+5. Run `python3 scripts/extract_video_frames.py`.
+6. Run `python3 scripts/check_site.py` and `node scripts/verify_browser.mjs`.
+
+The extractor reads the frame count, the dimensions, and the frame rate from the video. It writes 64 WebP frames, `public/center.webp`, and `public/frames/metadata.json`. Options: `--width` (default 864), `--quality` (default 86), and `--center-frame`.
+
+### Why the extractor uses angle annotations
+
+The current video does not start with a clean circle. Its segments are as follows:
+
+| Source frames | Content | Use |
+|---|---|---|
+| 0–5 | close-up at a larger scale | not used, because the scale jumps |
+| 6–17 | transition out of the frontal pose | not used |
+| 18–180 | one full look-around, counter-clockwise on screen | ring frames |
+| 184–238 | upward hold, a blink near 212, then a frontal pose | frame 232 is `center.webp` |
+
+The extractor takes the 64 ring frames from frames 18–180. It spaces them evenly in head angle, not in time, because the turn speed is not constant. Ring index `i` has the screen angle `-90° - i × 5.625°`. Index 0 looks up, 16 looks left, 32 looks down, and 48 looks right. The keyframe angles are hand annotations, with an accuracy of approximately ±15°.
+
+## Runtime behavior
+
+- **Angle.** The angle is `Math.atan2(dy, dx)` from the face center at (0.50, 0.36) of the frame. Mouse and pen input work anywhere in the window. Touch input works when you drag on the portrait.
+- **Smoothing.** The player uses shortest-path circular interpolation, with a response of 0.26 for each 60 Hz frame. The response is corrected for the frame time.
+- **Frame selection.** The player selects the nearest ring index from 0 to 63. If that frame is not loaded, the player draws the nearest loaded frame. The player never blends two frames.
+- **Dead zone.** Within 12% of the portrait radius (half the long side of the field), the player draws `center.webp`, which gives direct eye contact.
+- **Preload.** The player loads `center.webp` first. Frames near the requested index load next. The other frames load at idle time or at the first input, nearest first, four at a time. A failed frame is not requested again.
+- **Keyboard.** The arrow keys point the gaze, and two keys together give a diagonal. Escape, Home, or 0 returns to eye contact. "Reset gaze" does the same.
+- **Reduced motion.** With `prefers-reduced-motion: reduce`, the player shows `center.webp` only. It loads no ring frames and does not listen for pointer input.
+- **Fallback.** When `frames/metadata.json` or `center.webp` is absent, the page draws the approved still portrait (`public/assets/lily/lily_stylized_approved.png`). The page then says "Still portrait — animation frames not installed". The code path has the label FALLBACK PATH in `public/js/main.js`.
+- **Missing ring frames.** If `metadata.json` and `center.webp` load but the ring frames fail, the player holds eye contact. The page then says "Still portrait — animation frames not installed", in mode `still`.
+- **Edge treatment.** The front canvas has a soft mask on each edge. A small copy of the same frame sits behind it at 1.14 × 1.07 scale, with a 52 px blur. The red field continues past the frame edge and fades into the near-black page. The site uses no CSS rotation, perspective, or 3D transforms.
+
+## Validation
+
+```bash
+python3 scripts/check_site.py
+node scripts/verify_browser.mjs --shots /tmp/lily-shots   # needs the server on :4173 and Google Chrome
+```
+
+`verify_browser.mjs` uses the Chrome DevTools Protocol directly. It needs no npm packages.
+
+## Earlier work in this repository
+
+The `generator/` package and `scripts/build_eye_rig.py` come from earlier approaches: a 9 × 5 phi/theta image grid and a 2D eye rig. The page does not use them. Their outputs stay in `assets/`, `output/`, and `public/assets/lily/` for reference.
+# lilysite
