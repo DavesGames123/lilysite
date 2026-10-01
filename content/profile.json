@@ -13,6 +13,14 @@
   },
   "links": [
     {
+      "label": "IFC",
+      "url": "https://www.linkedin.com/company/4783/",
+      "logo": "ifc",
+      "aria": "International Finance Corporation (IFC) on LinkedIn",
+      "hero_only": true,
+      "source": "supplied by the site owner"
+    },
+    {
       "label": "LinkedIn",
       "url": "https://www.linkedin.com/in/lily-kubala/",
       "source": "supplied by the site owner"

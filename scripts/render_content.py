@@ -56,27 +56,40 @@ LOGOS = {
 }
 
 
+# Image logos: the file is a white-on-transparent mask; CSS colors it.
+IMAGE_LOGOS = {"ifc": ("/icons/ifc-logo-mask.png", 1119, 197)}
+
+
 def render_links(data: dict) -> str:
     items = []
     for link in data.get("links", []):
         label = link["label"]
-        if label in LOGOS:
+        aria = e(link.get("aria") or f'{data["name"]} on {label}') + " (opens in a new tab)"
+        href = e(link["url"])
+        if link.get("logo") in IMAGE_LOGOS:
+            src, w, h = IMAGE_LOGOS[link["logo"]]
             items.append(
-                f'  <a class="link-logo link-logo-{e(label.lower())}" href="{e(link["url"])}" target="_blank" rel="noopener" '
-                f'aria-label="{e(data["name"])} on {e(label)} (opens in a new tab)">'
+                f'  <a class="link-logo link-logo-wide link-logo-{e(link["logo"])}" href="{href}" target="_blank" rel="noopener" '
+                f'aria-label="{aria}" style="--logo: url({src}); --logo-ratio: {w} / {h}"></a>'
+            )
+        elif label in LOGOS:
+            items.append(
+                f'  <a class="link-logo link-logo-{e(label.lower())}" href="{href}" target="_blank" rel="noopener" '
+                f'aria-label="{aria}">'
                 f'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="{LOGOS[label]}" /></svg></a>'
             )
         else:
             items.append(
-                f'  <a class="link-out" href="{e(link["url"])}" target="_blank" rel="noopener">{e(label)}<span aria-hidden="true"> ↗</span><span class="visually-hidden"> (opens in a new tab)</span></a>'
+                f'  <a class="link-out" href="{href}" target="_blank" rel="noopener">{e(label)}<span aria-hidden="true"> ↗</span><span class="visually-hidden"> (opens in a new tab)</span></a>'
             )
-    return '<p class="hero-links">\n' + "\n".join(items) + "\n</p>"
+    sep = '\n  <span class="link-sep" aria-hidden="true"></span>\n'
+    return '<p class="hero-links">\n' + sep.join(items) + "\n</p>"
 
 
 def render_footer_links(data: dict) -> str:
     return "\n".join(
         f'<a href="{e(link["url"])}" target="_blank" rel="noopener">{e(link["label"])}<span class="visually-hidden"> (opens in a new tab)</span></a>'
-        for link in data.get("links", [])
+        for link in data.get("links", []) if not link.get("hero_only")
     )
 
 
@@ -175,7 +188,7 @@ def render_print(data: dict) -> str:
     )
     links = "".join(
         f'<li><span class="ps-side-k">{e(l["label"])}</span>{e(l["url"].replace("https://www.", "").rstrip("/"))}</li>'
-        for l in data.get("links", [])
+        for l in data.get("links", []) if not l.get("hero_only")
     )
     focus = "".join(f"<li>{e(f)}</li>" for f in data["focus"])
     skills = "".join(f"<li>{e(x)}</li>" for x in data["skills"])
