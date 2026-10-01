@@ -474,5 +474,71 @@
       "angle_degrees": -84.375,
       "filename": "frame_063.webp"
     }
-  ]
+  ],
+  "return_sequence": {
+    "note": "from the ring's up pose (index 0) to eye contact; play in reverse to leave eye contact",
+    "joins_ring_index": 0,
+    "frames": [
+      {
+        "index": 0,
+        "source_frame": 17,
+        "filename": "return_00.webp"
+      },
+      {
+        "index": 1,
+        "source_frame": 16,
+        "filename": "return_01.webp"
+      },
+      {
+        "index": 2,
+        "source_frame": 15,
+        "filename": "return_02.webp"
+      },
+      {
+        "index": 3,
+        "source_frame": 14,
+        "filename": "return_03.webp"
+      },
+      {
+        "index": 4,
+        "source_frame": 13,
+        "filename": "return_04.webp"
+      },
+      {
+        "index": 5,
+        "source_frame": 12,
+        "filename": "return_05.webp"
+      },
+      {
+        "index": 6,
+        "source_frame": 11,
+        "filename": "return_06.webp"
+      },
+      {
+        "index": 7,
+        "source_frame": 10,
+        "filename": "return_07.webp"
+      },
+      {
+        "index": 8,
+        "source_frame": 9,
+        "filename": "return_08.webp"
+      },
+      {
+        "index": 9,
+        "source_frame": 8,
+        "filename": "return_09.webp"
+      },
+      {
+        "index": 10,
+        "source_frame": 7,
+        "filename": "return_10.webp"
+      },
+      {
+        "index": 11,
+        "source_frame": 6,
+        "filename": "return_11.webp"
+      }
+    ]
+  }
 }
