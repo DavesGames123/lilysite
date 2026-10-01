@@ -34,6 +34,8 @@ export async function loadManifest() {
     deadzone: meta.center_deadzone_fraction_of_radius ?? 0.12,
     centerUrl: new URL(meta.center_filename || "../center.webp", new URL(FRAMES_BASE, location.href)).pathname,
     frameUrls: meta.frames.map((f) => `${FRAMES_BASE}${f.filename}`),
+    // Recorded move from the ring's up pose (index 0) to eye contact; may be absent.
+    returnUrls: (meta.return_sequence?.frames || []).map((f) => `${FRAMES_BASE}${f.filename}`),
     background: meta.background_rgb || null,
   };
 }

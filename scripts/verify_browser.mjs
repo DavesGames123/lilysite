@@ -186,6 +186,20 @@ try {
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: cx + dz * 1.6, y: cy });
   check(Boolean(await settle(expectedIndex(meta, 0))), "dead zone: ring frame just outside the radius");
 
+  // 3b. Looking back is animated: ring -> up pose -> recorded return frames -> center
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: cx + Math.cos(Math.PI / 2) * far, y: cy + Math.sin(Math.PI / 2) * far });
+  await settle(expectedIndex(meta, 90));
+  await evaluate(`(() => { window.__seen = []; const rec = () => { const d = window.__portrait.drawn; if (window.__seen[window.__seen.length - 1] !== d) window.__seen.push(d); if (d !== "center") requestAnimationFrame(rec); }; requestAnimationFrame(rec); })()`);
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: cx, y: cy });
+  await settle("center");
+  const seen = await evaluate("window.__seen");
+  const returns = seen.filter((d) => typeof d === "string" && d.startsWith("r"));
+  const ringBefore = seen.filter((d) => typeof d === "number");
+  check(returns.length >= 6 && ringBefore.length >= 3 && seen[seen.length - 1] === "center",
+    "return to eye contact: swings along the ring, then plays the recorded return frames", `${seen.length} poses: ${seen.slice(0, 40).join(" ")}`);
+  const order = returns.map((d) => Number(d.slice(1)));
+  check(order.every((v, i) => i === 0 || v >= order[i - 1]), "return to eye contact: return frames play in order (up -> camera)", order.join(","));
+
   // 4. One draw per animation frame, never blended
   const audit = await evaluate("window.__drawAudit");
   check(audit.maxPerFrame <= 1, "renderer: at most one drawImage per animation frame", JSON.stringify(audit));
