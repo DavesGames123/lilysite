@@ -20,8 +20,6 @@ import { Companion } from "./companion.js";
 const APPROVED_PORTRAIT = "/assets/lily/lily_stylized_approved.png";
 const RING_FACE = [0.5, 0.36];
 const RESPONSE = 0.26; // per 60 Hz frame, corrected for frame time below
-const RETURN_MS = 420; // duration of the recorded up <-> eye-contact move
-const UP_SNAP = 0.07; // rad: close enough to the up pose to start the drop
 const TAU = Math.PI * 2;
 
 const figure = document.getElementById("portrait");
@@ -58,10 +56,6 @@ const state = {
   index: null,
   requested: null,
   backgroundQueued: false,
-  // lift: 0 = eye contact, 1 = on the ring. Between them, the recorded return
-  // frames play (index 0 = up, last = nearly eye contact). Never blended.
-  lift: 0,
-  returnImages: null,
   raf: 0,
   last: 0,
 };
@@ -101,53 +95,21 @@ function drawRing(index) {
   if (hit && renderer.draw(hit.image, hit.index)) state.index = hit.index;
 }
 
-function drawReturn(lift) {
-  const frames = state.returnImages;
-  const i = Math.min(frames.length - 1, Math.max(0, Math.round((1 - lift) * (frames.length - 1))));
-  if (renderer.draw(frames[i], `r${i}`)) state.index = `r${i}`;
-}
-
-// Steer the ring angle toward `goal`; returns the remaining delta.
-function steer(goal, dt) {
-  const delta = shortestDelta(state.current, goal);
-  state.current += delta * (1 - Math.pow(1 - RESPONSE, dt / 16.67));
-  drawRing(angleToIndex(state.current));
-  return delta;
-}
-
 function tick(now) {
   state.raf = 0;
   const dt = state.last ? Math.min(64, now - state.last) : 16.67;
   state.last = now;
-  const animated = state.returnImages && !reducedMotion.matches;
-  const up = state.ring.offsetRad;
-  let moving;
-  if (!animated) {
-    // No recorded return (or reduced motion): change pose directly.
-    if (state.center) { state.lift = 0; drawCenter(); moving = false; }
-    else { state.lift = 1; moving = Math.abs(steer(state.target, dt)) > 0.002; }
-  } else if (state.center) {
-    if (state.lift >= 1) {
-      // Swing along the ring to the up pose, then drop into eye contact.
-      const delta = steer(up, dt);
-      if (Math.abs(delta) < UP_SNAP && angleToIndex(state.current) === 0) state.lift = 0.999;
-      moving = true;
-    } else {
-      state.lift = Math.max(0, state.lift - dt / RETURN_MS);
-      if (state.lift === 0) drawCenter(); else drawReturn(state.lift);
-      moving = state.lift > 0;
-    }
-  } else if (state.lift < 1) {
-    // Leave eye contact the same way: lift to the up pose, then turn.
-    state.lift = Math.min(1, state.lift + dt / RETURN_MS);
-    state.current = up;
-    if (state.lift === 1) drawRing(0); else drawReturn(state.lift);
-    moving = true;
-  } else {
-    moving = Math.abs(steer(state.target, dt)) > 0.002;
+  if (state.center) {
+    drawCenter();
+    state.last = 0;
+    return;
   }
+  const delta = shortestDelta(state.current, state.target);
+  const k = 1 - Math.pow(1 - RESPONSE, dt / 16.67);
+  state.current += delta * k;
+  drawRing(angleToIndex(state.current));
   // Frames that load later reschedule through store.onLoad, so no busy wait occurs here.
-  if (moving) schedule();
+  if (Math.abs(delta) > 0.002) schedule();
   else state.last = 0;
 }
 
@@ -167,9 +129,8 @@ function onTarget(target) {
   if (target.center) {
     state.center = true;
   } else {
-    // Without the recorded return, leave eye contact straight toward the new
-    // angle. With it, tick() lifts through the up pose first.
-    if (state.center && !(state.returnImages && !reducedMotion.matches)) state.current = target.angle;
+    // Leave eye contact straight toward the new angle, not from a stale one.
+    if (state.center) state.current = target.angle;
     state.center = false;
     state.target = target.angle;
   }
@@ -244,12 +205,6 @@ async function start() {
 
   renderer.resize(ring.width, ring.height);
   drawCenter();
-  // The return frames load right after the center frame; until then, poses change directly.
-  if (ring.returnUrls.length) {
-    Promise.all(ring.returnUrls.map((u) => decodeImage(u)))
-      .then((images) => { state.returnImages = images; })
-      .catch(() => {});
-  }
   applyMotionPreference();
   reducedMotion.addEventListener("change", applyMotionPreference);
 }
@@ -266,7 +221,6 @@ Object.defineProperty(window, "__portrait", {
     targetDeg: (state.target * 180) / Math.PI,
     loaded: state.store?.loadedCount ?? 0,
     companion: companion.active,
-    lift: state.lift,
     failed: state.store?.failed.size ?? 0,
   }),
 });
