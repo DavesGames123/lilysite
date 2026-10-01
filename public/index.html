@@ -52,7 +52,6 @@
           <a class="link-logo link-logo-linkedin" href="https://www.linkedin.com/in/lily-kubala/" target="_blank" rel="noopener" aria-label="Lily Kubala on LinkedIn (opens in a new tab)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg></a>
         </p>
         <!-- /render:links -->
-        <p class="hero-cue" aria-hidden="true"><span class="cue-dot"></span><span data-portrait-cue>Touch anywhere — Lily follows</span></p>
       </div>
 
       <div class="portrait-slot" id="portrait-slot">
@@ -65,9 +64,8 @@
           <span class="visually-hidden" id="portrait-alt">Stylized portrait of Lily Kubala in a navy turtleneck with a gold pendant, against a vivid red background.</span>
         </div>
         <figcaption class="portrait-caption">
-          <span class="portrait-cue" id="portrait-cue"><span class="cue-dot" aria-hidden="true"></span><span id="portrait-cue-text" data-portrait-cue>Move your cursor — Lily follows</span></span>
-          <button class="reset-button" id="portrait-reset" type="button">Reset gaze</button>
-          <span class="visually-hidden" id="portrait-help">Move the pointer, touch the screen, or use the arrow keys. Press Escape or Reset gaze to return to eye contact.</span>
+          <span class="visually-hidden" id="portrait-cue-text" role="status" data-portrait-cue>Move your cursor — Lily follows</span>
+          <span class="visually-hidden" id="portrait-help">Move the pointer, touch the screen, or use the arrow keys. Press Escape to return to eye contact.</span>
         </figcaption>
       </figure>
       </div>
@@ -259,8 +257,8 @@
     </footer>
 
     <div class="companion" id="companion" role="button" aria-label="Back to top" aria-hidden="true" tabindex="-1">
-      <span class="companion-glow" aria-hidden="true"></span>
-      <canvas class="companion-canvas" id="companion-canvas" width="248" height="336" aria-hidden="true"></canvas>
+      <span class="studio-red" aria-hidden="true"></span>
+      <canvas class="companion-canvas" id="companion-canvas" width="288" height="512" aria-hidden="true"></canvas>
     </div>
 
     <!-- render:print -->

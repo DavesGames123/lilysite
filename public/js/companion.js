@@ -3,12 +3,12 @@
 // The hero portrait stays in the page and scrolls natively. When the hero face
 // leaves the screen, the portrait travels into the lower-right corner:
 //
-//   1. The companion appears exactly over the hero's head-and-shoulders crop
-//      (same place, same size), and the hero canvas hides (.is-handed-off).
-//      The two are the same frame, so the hand-off does not show.
-//   2. The companion shrinks and moves into the corner (transform only).
+//   1. The companion is a miniature of the hero field: the same 9:16 frame in
+//      the same studio arch. It appears exactly over the hero field, and the
+//      hero canvas and arch hide (.is-handed-off). The hand-off does not show.
+//   2. The companion, arch and all, shrinks into the corner (transform only).
 //   3. When the face comes back, the companion travels back over the hero
-//      crop, the hero canvas shows again, and the companion hides.
+//      field, the hero canvas and arch show again, and the companion hides.
 //
 // The companion draws the same frame as the hero canvas (one frame, full
 // opacity, a crop), so it follows the finger too. An IntersectionObserver on
@@ -16,8 +16,8 @@
 // so the motion runs on the compositor, and iOS toolbar resizes do not move
 // it. With reduced motion, the swap has no travel. A tap scrolls to the top.
 
-// Crop of the 9:16 frame, in frame fractions: head and shoulders.
-const CROP = { x: 0.08, y: 0.0, w: 0.84, h: 0.64 };
+// The whole 9:16 frame (frame fractions), so the companion maps 1:1 onto the hero field.
+const CROP = { x: 0, y: 0, w: 1, h: 1 };
 const STACKED = "(max-width: 1023.98px)";
 const TRAVEL_MS = 650;
 

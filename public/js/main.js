@@ -25,7 +25,6 @@ const TAU = Math.PI * 2;
 const figure = document.getElementById("portrait");
 const field = document.getElementById("portrait-field");
 const cues = document.querySelectorAll("[data-portrait-cue]");
-const resetButton = document.getElementById("portrait-reset");
 const renderer = new PortraitRenderer(document.getElementById("portrait-canvas"), null);
 const css = getComputedStyle(document.documentElement);
 const companion = new Companion({
@@ -144,11 +143,9 @@ function applyMotionPreference() {
     state.controller.disable();
     state.center = true;
     drawCenter();
-    resetButton.hidden = true;
     setMode("reduced", "Motion reduced — portrait holds eye contact");
   } else {
     state.controller.enable();
-    resetButton.hidden = false;
     const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1200));
     idle(queueBackground, { timeout: 4000 });
     setMode("ring", matchMedia("(hover: none)").matches ? "Touch anywhere — Lily follows" : "Move your cursor — Lily follows");
@@ -162,9 +159,8 @@ async function startFallback(reason) {
   renderer.resize(864, 1536);
   figure.dataset.alpha = "false";
   if (image) renderer.drawStatic(image);
-  companion.enabled = false; // the square still has no head-and-shoulders crop
+  companion.enabled = false; // the square still does not fill the 9:16 field
   stage.schedule();
-  resetButton.hidden = true;
   setMode("fallback", image ? "Still portrait — animation frames not installed" : "Portrait unavailable");
 }
 
@@ -175,7 +171,6 @@ function startStill() {
   state.controller.disable();
   state.center = true;
   drawCenter();
-  resetButton.hidden = true;
   setMode("still", "Still portrait — animation frames not installed");
 }
 
@@ -213,10 +208,6 @@ async function start() {
   reducedMotion.addEventListener("change", applyMotionPreference);
 }
 
-resetButton.addEventListener("click", () => {
-  onTarget({ center: true });
-  field.focus({ preventScroll: true });
-});
 document.getElementById("print-page")?.addEventListener("click", () => window.print());
 
 // Read-only snapshot for automated checks (see scripts/verify_browser.mjs).
