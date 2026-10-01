@@ -462,8 +462,8 @@ html::after {
     display: block; position: fixed; z-index: 40;
     right: calc(12px + env(safe-area-inset-right));
     bottom: calc(4px + env(safe-area-inset-bottom));
-    width: 118px; aspect-ratio: 9 / 16;
-    --studio-w: 118px;
+    width: 158px; aspect-ratio: 9 / 16;
+    --studio-w: 158px;
     transform-origin: 0 0;
     opacity: 0; visibility: hidden; pointer-events: none; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
