@@ -1,11 +1,12 @@
-"""Make the site icons from Lily's center frame (public/center.webp).
+"""Make the site icons: a red serif "L" on near-black.
 
-Each icon is a square crop of her face on the studio red, so it reads at
-16 px in a browser tab. Writes:
+The L is Georgia Bold Italic (macOS), in the studio red, on the page's night
+color, in a rounded square. Didot was tried first; its hairlines vanish at
+16 px, and Georgia's heavy strokes hold. Writes:
 
-    public/favicon.ico            16, 32, 48 px
+    public/favicon.ico                  16, 32, 48 px
     public/icons/favicon-32.png
-    public/icons/apple-touch-icon.png   180 px, opaque
+    public/icons/apple-touch-icon.png   180 px, square (iOS rounds it)
     public/icons/icon-192.png, icon-512.png   for site.webmanifest
 
 Usage:
@@ -14,44 +15,42 @@ Usage:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "public"
-META = json.loads((PUBLIC / "frames" / "metadata.json").read_text())
-RED = tuple(META.get("background_rgb", [212, 30, 18]))
-FACE_X, FACE_Y = META.get("face_center_normalized", [0.5, 0.36])
-# Side of the square crop, as a fraction of the frame width: hair and red around the face.
-CROP_SIDE = 1.0
-# Small icons crop tighter, so the face fills the 16-48 px squares.
-TIGHT_SIDE = 0.84
+RED = (212, 30, 18)
+NIGHT = (11, 10, 13)
+FONT = "/System/Library/Fonts/Supplemental/Georgia Bold Italic.ttf"
+FONT_INDEX = 0
+SIZE = 1024
 
 
-def face_square(side_fraction: float) -> Image.Image:
-    frame = Image.open(PUBLIC / "center.webp").convert("RGBA")
-    w, h = frame.size
-    side = int(w * side_fraction)
-    cx, cy = int(w * FACE_X), int(h * FACE_Y) + int(side * 0.04)
-    box = (cx - side // 2, cy - side // 2, cx + side // 2, cy + side // 2)
-    crop = frame.crop(box)
-    base = Image.new("RGBA", crop.size, RED + (255,))
-    base.alpha_composite(crop)
-    return base.convert("RGB")
+def mark(rounded: bool) -> Image.Image:
+    img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    radius = int(SIZE * 0.22) if rounded else 0
+    d.rounded_rectangle((0, 0, SIZE - 1, SIZE - 1), radius=radius, fill=NIGHT + (255,))
+    font = ImageFont.truetype(FONT, int(SIZE * 0.86), index=FONT_INDEX)
+    left, top, right, bottom = d.textbbox((0, 0), "L", font=font)
+    x = (SIZE - (right - left)) / 2 - left - SIZE * 0.01
+    y = (SIZE - (bottom - top)) / 2 - top
+    d.text((x, y), "L", font=font, fill=RED + (255,))
+    return img
 
 
 def main() -> int:
     (PUBLIC / "icons").mkdir(exist_ok=True)
-    large = face_square(CROP_SIDE)
-    tight = face_square(TIGHT_SIDE)
-    resize = lambda img, n: img.resize((n, n), Image.LANCZOS)
-    resize(large, 180).save(PUBLIC / "icons" / "apple-touch-icon.png", optimize=True)
-    resize(large, 192).save(PUBLIC / "icons" / "icon-192.png", optimize=True)
-    resize(large, 512).save(PUBLIC / "icons" / "icon-512.png", optimize=True)
-    resize(tight, 32).save(PUBLIC / "icons" / "favicon-32.png", optimize=True)
-    resize(tight, 256).save(PUBLIC / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
+    tab = mark(rounded=True)
+    full = mark(rounded=False).convert("RGB")
+    fit = lambda img, n: img.resize((n, n), Image.LANCZOS)
+    fit(full, 180).save(PUBLIC / "icons" / "apple-touch-icon.png", optimize=True)
+    fit(full, 192).save(PUBLIC / "icons" / "icon-192.png", optimize=True)
+    fit(full, 512).save(PUBLIC / "icons" / "icon-512.png", optimize=True)
+    fit(tab, 32).save(PUBLIC / "icons" / "favicon-32.png", optimize=True)
+    fit(tab, 256).save(PUBLIC / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
     for p in sorted((PUBLIC / "icons").glob("*.png")) + [PUBLIC / "favicon.ico"]:
         print(f"{p.relative_to(ROOT)}  {p.stat().st_size} B")
     return 0
