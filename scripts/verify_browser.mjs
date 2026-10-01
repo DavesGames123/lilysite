@@ -151,21 +151,14 @@ try {
   check(Math.abs(ratio[0] - 9 / 16) < 0.002 && Math.abs(ratio[1] - 9 / 16) < 0.01, "desktop: canvas keeps 9:16 (pixels and CSS box)", ratio.map((v) => v.toFixed(4)).join(" / "));
   const corners = await evaluate(`(() => { const c = document.getElementById("portrait-canvas"); const x = c.getContext("2d"); const px = (a, b) => x.getImageData(a, b, 1, 1).data[3]; return [px(4, 4), px(c.width - 5, 4), px(4, c.height / 2), px(c.width / 2, c.height / 2)]; })()`);
   check(corners[0] === 0 && corners[1] === 0 && corners[2] === 0 && corners[3] === 255, "cutout: frame corners transparent, face opaque (no rectangle)", JSON.stringify(corners));
-  // Corner field: red at the top-right corner and behind the lower-left hair, black at the bottom-left.
-  const field = await evaluate(`(() => {
-    const c = document.getElementById("page-surface-canvas"), x = c.getContext("2d");
+  // Studio red: an arch of the video red behind her silhouette, black elsewhere.
+  const studio = await evaluate(`(() => {
     const f = document.getElementById("portrait-field").getBoundingClientRect();
-    const W = document.documentElement.clientWidth, H = innerHeight, sx = c.width / W, sy = c.height / H;
-    const px = (vx, vy) => Array.from(x.getImageData(Math.min(c.width - 1, vx * sx), Math.min(c.height - 1, vy * sy), 1, 1).data);
-    return { corner: px(W - 4, 4), hair: px(f.left + f.width * 0.1, f.top + f.height * 0.7), crown: px(f.left + f.width * 0.5, f.top + f.height * 0.03), bottomLeft: px(4, H - 4) };
+    const r = document.querySelector(".studio-red").getBoundingClientRect();
+    const cs = getComputedStyle(document.querySelector(".studio-red"));
+    return { covers: r.left < f.left && r.right > f.right && r.top < f.top, bg: cs.backgroundColor, body: getComputedStyle(document.documentElement).backgroundColor };
   })()`);
-  const isRed = (p) => p[3] > 240 && p[0] > 180 && p[1] < 60;
-  check(isRed(field.corner) && isRed(field.crown) && isRed(field.hair), "corner field: red at the corner, the crown, and the lower hair", JSON.stringify(field));
-  check(field.bottomLeft[3] === 0, "corner field: bottom-left of the window stays black", JSON.stringify(field.bottomLeft));
-  const d1 = await evaluate(`document.getElementById("page-contour-path").getAttribute("d")`);
-  await sleep(700);
-  const d2 = await evaluate(`document.getElementById("page-contour-path").getAttribute("d")`);
-  check(d1.length > 100 && d1 !== d2, "corner field: contour boundary animates");
+  check(studio.covers && /212, 30, 18/.test(studio.bg) && /11, 10, 13/.test(studio.body), "studio: red arch behind the silhouette, black page", JSON.stringify(studio));
   await shot("desktop-hero");
 
   // 2. Pointer direction maps to the expected ring frame
@@ -208,13 +201,7 @@ try {
   const rail = await evaluate(`(() => { const r = document.querySelector("#experience .timeline").getBoundingClientRect(); return r.right; })()`);
   check(fr.x + fr.w > W - 80 && fr.x + fr.w <= W, "scroll: portrait docks at the right edge", `right=${(fr.x + fr.w).toFixed(0)}`);
   check(rail < fr.x, "scroll: résumé text stays clear of the docked portrait", `text right=${rail.toFixed(0)} portrait left=${fr.x.toFixed(0)}`);
-  const docked = await evaluate(`(() => {
-    const c = document.getElementById("page-surface-canvas"), x = c.getContext("2d");
-    const f = document.getElementById("portrait-field").getBoundingClientRect();
-    const W = document.documentElement.clientWidth, sx = c.width / W, sy = c.height / innerHeight;
-    return Array.from(x.getImageData(Math.floor((f.left + f.width * 0.1) * sx), Math.floor((f.top + f.height * 0.7) * sy), 1, 1).data);
-  })()`);
-  check(isRed(docked), "scroll: corner field follows the docked portrait (lower hair on red)", JSON.stringify(docked));
+
   const sc = { cx: fr.x + fr.w * meta.face_center_normalized[0], cy: fr.y + fr.h * meta.face_center_normalized[1] };
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: sc.cx - 400, y: sc.cy });
   check(Boolean(await settle(expectedIndex(meta, 180))), "scroll: docked portrait still follows the cursor (left)");
@@ -263,6 +250,9 @@ try {
   const mr = await fieldRect();
   check(Math.abs(mr.w - 390) < 1 && mr.y + mr.h * 0.36 < 844 * 0.5, "mobile: full-bleed portrait, face in the top half of the first screen", `w=${mr.w.toFixed(0)} faceY=${(mr.y + mr.h * 0.36).toFixed(0)}`);
   await evaluate(`window.scrollTo({ top: document.getElementById("experience").offsetTop, behavior: "instant" })`);
+  await sleep(120);
+  const flight = await evaluate(`(() => { const t = new DOMMatrix(getComputedStyle(document.getElementById("companion")).transform); return { scale: t.a, handed: document.getElementById("portrait").classList.contains("is-handed-off") }; })()`);
+  check(flight.scale > 1.2 && flight.handed, "mobile scroll: portrait travels from the hero toward the corner (starts large, hero handed off)", JSON.stringify(flight));
   await sleep(1000);
   p = await portrait();
   const comp = await evaluate(`(() => { const e = document.getElementById("companion"), r = e.getBoundingClientRect(), cs = getComputedStyle(e); return { x: r.left, y: r.top, w: r.width, h: r.height, o: cs.opacity, heroPos: getComputedStyle(document.getElementById("portrait")).position }; })()`);
@@ -284,7 +274,8 @@ try {
   await sleep(1000);
   p = await portrait();
   const heroBack = await fieldRect();
-  check(!p.companion && Math.abs(heroBack.y) < 2, "mobile scroll: companion leaves when the hero face returns", `companion=${p.companion} heroY=${heroBack.y.toFixed(1)}`);
+  const heroCanvas = await evaluate(`getComputedStyle(document.getElementById("portrait-canvas")).visibility`);
+  check(!p.companion && Math.abs(heroBack.y) < 2 && heroCanvas === "visible", "mobile scroll: portrait travels back and the hero canvas returns", `companion=${p.companion} heroY=${heroBack.y.toFixed(1)} canvas=${heroCanvas}`);
   await shot("mobile-full", true);
 
   // 7. Reduced motion
@@ -294,10 +285,8 @@ try {
   await sleep(500);
   p = await portrait();
   check(p.mode === "reduced" && p.drawn === "center" && p.loaded === 0, "reduced motion: center only, no ring frames loaded", JSON.stringify(p));
-  const r1 = await evaluate(`document.getElementById("page-contour-path").getAttribute("d")`);
-  await sleep(600);
-  const r2 = await evaluate(`document.getElementById("page-contour-path").getAttribute("d")`);
-  check(r1 === r2, "reduced motion: surface boundary holds still");
+  const anim = await evaluate(`getComputedStyle(document.querySelector(".studio-red")).animationName`);
+  check(anim === "none", "reduced motion: studio arch does not breathe", anim);
   check(await evaluate(`document.getElementById("portrait-reset").hidden`), "reduced motion: reset control hidden");
 
   // 7b. Metadata and center frame present, ring frames absent (404)
