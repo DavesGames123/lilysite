@@ -18,6 +18,10 @@ import { ScrollStage } from "./stage.js";
 import { Companion } from "./companion.js";
 
 const APPROVED_PORTRAIT = "/assets/lily/lily_stylized_approved.png";
+// The first name for the cues comes from the rendered profile, so an edit of the name reaches them.
+const FIRST_NAME = (() => {
+  try { return JSON.parse(document.getElementById("profile-data").textContent).name.split(" ")[0]; } catch { return ""; }
+})() || "The portrait";
 const RING_FACE = [0.5, 0.36];
 const RESPONSE = 0.26; // per 60 Hz frame, corrected for frame time below
 const TAU = Math.PI * 2;
@@ -149,7 +153,7 @@ function applyMotionPreference() {
     state.controller.enable();
     const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1200));
     idle(queueBackground, { timeout: 4000 });
-    setMode("ring", matchMedia("(hover: none)").matches ? "Touch anywhere — Lily follows" : "Move your cursor — Lily follows");
+    setMode("ring", matchMedia("(hover: none)").matches ? `Touch anywhere — ${FIRST_NAME} follows` : `Move your cursor — ${FIRST_NAME} follows`);
   }
 }
 

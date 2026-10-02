@@ -1,0 +1,97 @@
+/* Site editor (public/js/editor.js): the edit switch, the password dialog,
+   the edit panel, and the outline on editable text. Uses the tokens of
+   styles.css. Nothing here prints. */
+
+.edit-switch {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px;
+  border: 1px solid rgba(246, 239, 227, 0.28); background: transparent; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream-2);
+}
+.edit-switch::before {
+  content: ""; width: 26px; height: 14px; border-radius: 7px; flex: none;
+  background: rgba(246, 239, 227, 0.2) radial-gradient(circle at 7px 7px, var(--cream) 0 5px, transparent 5.5px);
+  transition: background-position 0.2s;
+}
+.edit-switch[aria-checked="true"] { color: var(--night); background: var(--gold-light); border-color: var(--gold-light); }
+.edit-switch[aria-checked="true"]::before { background: var(--night) radial-gradient(circle at 19px 7px, var(--gold-light) 0 5px, transparent 5.5px); }
+.edit-switch:hover { border-color: var(--gold-light); }
+
+/* Editable text in edit mode */
+body.is-editing [data-edit] { cursor: text; outline: 1px dashed rgba(216, 181, 120, 0.45); outline-offset: 3px; }
+body.is-editing [data-edit]:hover { outline: 1px solid var(--gold-light); background: rgba(216, 181, 120, 0.08); }
+
+/* Password dialog */
+.ed-dialog {
+  width: min(400px, calc(100vw - 32px)); padding: 28px; border: 1px solid var(--rule);
+  background: var(--night); color: var(--cream); font-family: var(--sans);
+}
+.ed-dialog::backdrop { background: rgba(var(--night-rgb), 0.75); backdrop-filter: blur(4px); }
+.ed-dialog h2 { font-family: var(--serif); font-weight: 400; font-size: 2rem; margin: 0 0 18px; }
+.ed-dialog label { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream-3); margin-bottom: 8px; }
+.ed-dialog-msg { min-height: 1.5em; margin: 10px 0; font-size: 14px; color: var(--gold-light); }
+.ed-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+/* Shared controls */
+.ed-dialog input, .editor-panel input, .editor-panel textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid rgba(246, 239, 227, 0.25); border-radius: 0;
+  background: rgba(255, 255, 255, 0.04); color: var(--cream); font: 15px/1.4 var(--sans);
+}
+.editor-panel textarea { resize: vertical; min-height: 4.5em; }
+.ed-dialog input:focus, .editor-panel input:focus, .editor-panel textarea:focus { outline: 2px solid var(--gold-light); outline-offset: 0; border-color: transparent; }
+.ed-dialog button, .editor-panel button {
+  min-height: 40px; padding: 0 14px; border: 1px solid rgba(246, 239, 227, 0.3); background: transparent; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream);
+}
+.ed-dialog button:hover, .editor-panel button:hover { border-color: var(--gold-light); }
+.editor-panel button:disabled { opacity: 0.35; cursor: default; }
+.ed-primary { background: var(--gold-light) !important; border-color: var(--gold-light) !important; color: var(--night) !important; }
+
+/* Panel: a right-side drawer on wide screens, a bottom sheet on phones. */
+.editor-panel {
+  position: fixed; z-index: 60; top: 0; right: 0; bottom: 0; width: min(440px, 100vw);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 20px 22px calc(40px + env(safe-area-inset-bottom));
+  background: rgba(var(--night-rgb), 0.97); border-left: 1px solid var(--gold);
+  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.45);
+  font-family: var(--sans); color: var(--cream);
+}
+@media (max-width: 760px) {
+  .editor-panel { top: auto; height: 62svh; width: 100vw; border-left: 0; border-top: 1px solid var(--gold); }
+  body.is-editing { padding-bottom: 62svh; }
+}
+.ed-head { display: flex; align-items: center; gap: 12px; }
+.ed-title { font-family: var(--serif); font-size: 1.8rem; line-height: 1; }
+.ed-dirty { flex: 1; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream-3); }
+.ed-hint { margin: 10px 0 14px; font-size: 13px; color: var(--cream-3); }
+.ed-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ed-status { min-height: 1.4em; margin: 10px 0 6px; font-size: 13px; color: var(--cream-2); }
+.ed-status[data-tone="error"] { color: #ff9c8a; }
+.ed-status[data-tone="ok"] { color: var(--gold-light); }
+
+.ed-section { border-top: 1px solid var(--rule); }
+.ed-section > summary, .ed-card > summary {
+  cursor: pointer; padding: 14px 0; list-style-position: inside;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-light);
+}
+.ed-card > summary { padding: 10px 0; color: var(--cream); text-transform: none; letter-spacing: 0.02em; font-size: 13px; }
+.ed-section[open] { padding-bottom: 18px; }
+.ed-field { margin-top: 12px; }
+.ed-field label, .ed-list legend, .ed-group legend {
+  display: block; margin-bottom: 6px; padding: 0;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream-3);
+}
+.ed-list, .ed-group { margin: 16px 0 0; padding: 0; border: 0; min-width: 0; }
+.ed-group > .ed-object { padding-left: 12px; border-left: 1px solid var(--rule); }
+.ed-check { display: flex; align-items: center; gap: 10px; }
+.ed-check input { width: 18px; height: 18px; accent-color: var(--gold-light); }
+.ed-check label { margin: 0; }
+.ed-row { display: flex; align-items: flex-end; gap: 6px; }
+.ed-row .ed-field { flex: 1; margin-top: 6px; }
+.ed-card { margin-top: 10px; padding: 0 12px 12px; border: 1px solid var(--rule); }
+.ed-item-tools { display: flex; gap: 6px; margin-top: 10px; }
+.ed-row .ed-item-tools { margin-top: 0; }
+.ed-item-tools button { min-height: 40px; min-width: 40px; padding: 0 10px; }
+.ed-remove { margin-left: auto; }
+.ed-add { margin-top: 10px; border-style: dashed !important; }
+
+@media print { .editor-panel, .ed-dialog, .edit-switch { display: none !important; } }

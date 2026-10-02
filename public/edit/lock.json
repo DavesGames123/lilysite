@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "kdf": {
+    "name": "PBKDF2",
+    "hash": "SHA-256",
+    "iterations": 600000
+  },
+  "verifier": {
+    "salt": "scIxPbHXvAzKWIJMh/0xXg==",
+    "hash": "b3q+rxHVJzEmGwIciGu7ViKkzycgodhQv8Le1XeUVuY="
+  },
+  "publish": {
+    "repo": "DavesGames123/lilysite",
+    "branch": "main",
+    "path": "content/profile.json",
+    "sealed": null
+  }
+}
