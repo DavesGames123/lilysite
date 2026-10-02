@@ -15,6 +15,10 @@ Open `http://localhost:4173/`. To see the static fallback, open `http://localhos
 ```
 content/profile.json          résumé facts (the only content source)
 public/index.html             layout; render:* regions come from profile.json
+public/js/render.js           the one renderer: profile.json -> every render:* region (Node build and editor)
+public/js/editor.js           site editor: password switch, edit panel, live render, publish
+public/editor.css             editor switch, dialog, and panel
+public/edit/lock.json         editor password hash, publish target, sealed GitHub token
 public/styles.css             visual system, portrait edge treatment, print styles
 public/js/main.js             portrait player: modes, angle smoothing, frame selection
 public/js/manifest.js         loads frames/metadata.json; FrameStore preload queue
@@ -27,7 +31,8 @@ public/frames/                frame_000.webp ... frame_063.webp, metadata.json
 public/center.webp            frontal frame with direct eye contact
 scripts/extract_video_frames.py   video -> cutout frames, center.webp, metadata.json
 scripts/matte/                Vision subject-lift mask tool (Swift) and cutout clean-up (matte.py)
-scripts/render_content.py     profile.json -> index.html render regions
+scripts/render_content.mjs    profile.json -> index.html render regions (uses public/js/render.js)
+scripts/edit_lock.mjs         set the editor password; seal or test the GitHub token
 scripts/check_site.py         static checks (facts, contact, transforms, frames)
 scripts/verify_browser.mjs    headless Chrome checks (input, modes, layout)
 ```
@@ -52,7 +57,7 @@ The red behind her is a studio arch: a soft CSS arch in the exact red of the vid
 
 ## Print
 
-"Print résumé" (`window.print()`) prints a US Letter résumé, not the screen layout. `render_content.py` writes the `.print-sheet` block from `profile.json`. Only `@media print` shows it.
+"Print résumé" (`window.print()`) prints a US Letter résumé, not the screen layout. `render.js` writes the `.print-sheet` block from `profile.json`. Only `@media print` shows it.
 
 The sheet flows. The browser makes as many pages as the content needs, and the current content fills 2 pages. The order is the header with the headshot, the profile facts, then experience, education, and volunteering. A red card with skills, honors, and LinkedIn floats at the right of the experience.
 
@@ -71,7 +76,7 @@ swiftc -O -o /tmp/print_webkit scripts/print_webkit.swift
 
 ## Hosting (GitHub Pages)
 
-The site deploys like davesgames-site. `.github/workflows/pages.yml` runs on every push to `main`. It runs `scripts/check_site.py`, builds `dist/` with `scripts/build_dist.sh`, and publishes `dist/` to GitHub Pages. `public/CNAME` sets the domain to `lilykubala.com`.
+The site deploys like davesgames-site. `.github/workflows/pages.yml` runs on every push to `main`. It renders `profile.json` with `scripts/render_content.mjs`, runs `scripts/check_site.py`, builds `dist/` with `scripts/build_dist.sh`, and publishes `dist/` to GitHub Pages. `public/CNAME` sets the domain to `lilykubala.com`.
 
 One-time setup:
 
@@ -89,11 +94,47 @@ One-time setup:
 
 ## Change the résumé content
 
+There are two ways to change the content: the site editor on the live page, or an edit of `content/profile.json` in the repository. Both change only `profile.json`. The page is static HTML, so the résumé reads and prints without JavaScript.
+
+### Edit the site on the page
+
+1. Open `https://lilykubala.com/#edit`, or click "Edit site" in the footer.
+2. Type the editor password, then click "Unlock".
+3. Change the fields in the panel. To go to the field of a text, click that text on the page.
+4. Click "Publish". The live site shows the change after 1–2 minutes.
+
+The draft stays in the browser, so a reload does not delete it. "Discard changes" goes back to the published profile. When no token is sealed, "Publish" downloads `profile.json`, and the site owner must commit that file.
+
+### Set up direct publishing
+
+Publish needs a GitHub token. `lock.json` keeps the token encrypted with a key that comes from the editor password. The page source is public, so the token must have the smallest possible access.
+
+1. In GitHub, open Settings, then Developer settings, then Fine-grained tokens. Click "Generate new token".
+2. Set Repository access to "Only select repositories", and select `DavesGames123/lilysite`.
+3. Under Repository permissions, set Contents to "Read and write". Do not add other permissions.
+4. Generate the token, and copy it to the clipboard.
+5. Run this command:
+
+```bash
+EDIT_TOKEN="$(pbpaste)" node scripts/edit_lock.mjs seal
+```
+
+6. Type the editor password at the prompt. To test the result, run `node scripts/edit_lock.mjs unseal-test`.
+7. Commit `public/edit/lock.json`, then push.
+
+WARNING: Do not commit or paste a plain token. A plain token in the public repository gives write access to anyone who reads it.
+
+CAUTION: A new editor password (`edit_lock.mjs password`) clears the sealed token. After a password change, seal the token again.
+
+The encrypted token is public, so its safety depends on the password. A long password makes an offline guess slow. When the token expires, Publish reports "GitHub rejected the token". Make a new token, and seal it again.
+
+### Edit profile.json in the repository
+
 1. Edit `content/profile.json`. Use only facts from a real source.
-2. Run `python3 scripts/render_content.py`.
+2. Run `node scripts/render_content.mjs`.
 3. Run `python3 scripts/check_site.py`.
 
-The page is static HTML, so the résumé reads and prints without JavaScript.
+The Pages workflow also runs `render_content.mjs` before the checks, because the editor commits only `profile.json`.
 
 ## Replace the character video and extract frames
 
@@ -137,7 +178,10 @@ The extractor takes the 64 ring frames from frames 18–180. It spaces them even
 ```bash
 python3 scripts/check_site.py
 node scripts/verify_browser.mjs --shots /tmp/lily-shots   # needs the server on :4173 and Google Chrome
+EDIT_PASSWORD=... node scripts/verify_browser.mjs           # also runs the editor checks
 ```
+
+The editor checks run only when `EDIT_PASSWORD` is set, so the password is never in the repository.
 
 `verify_browser.mjs` uses the Chrome DevTools Protocol directly. It needs no npm packages.
 
