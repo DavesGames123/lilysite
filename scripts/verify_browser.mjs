@@ -320,13 +320,18 @@ try {
   check(/still portrait/i.test(cue) && !/follows/i.test(cue), "fallback: page does not claim animation", `cue="${cue}"`);
   await shot("desktop-fallback");
 
-  // 8b. Print: a two-page résumé with the headshot
+  // 8b. Print: a flowing résumé with the headshot
   await open(BASE, { width: 1440, height: 900 });
   await evaluate(`document.fonts.ready.then(() => true)`);
   const pdf = await send("Page.printToPDF", { printBackground: true, preferCSSPageSize: true });
   const bytes = Buffer.from(pdf.data, "base64");
   const pages = (bytes.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
-  check(pages === 2, "print: résumé prints on exactly 2 pages", `pages=${pages}`);
+  // The sheet flows, so the page count follows the content. A short profile prints on 1 page.
+  check(pages >= 1 && pages <= 2, "print: résumé prints on 1 or 2 pages", `pages=${pages}`);
+  await send("Emulation.setEmulatedMedia", { media: "print" });
+  const masked = await evaluate(`[...document.querySelectorAll(".print-sheet *")].filter(e => { const s = getComputedStyle(e); return (s.maskImage && s.maskImage !== "none") || (s.webkitMaskImage && s.webkitMaskImage !== "none"); }).length`);
+  await send("Emulation.setEmulatedMedia", { media: "" });
+  check(masked === 0, "print: no masked element in the print sheet (WebKit prints a mask as a black box)", `masked=${masked}`);
   const photo = await evaluate(`(() => { const i = document.querySelector(".ps-photo img"); return i.complete && i.naturalWidth > 0; })()`);
   check(photo, "print: headshot image loaded");
   if (SHOTS) {
