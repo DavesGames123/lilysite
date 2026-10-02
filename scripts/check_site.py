@@ -2,6 +2,7 @@
 
 Checks:
   - index.html is current with content/profile.json
+  - the editor lock has a password hash, and no plain token is in public/
   - every profile fact shows in the page text
   - the page contains no email address, phone number, social link, or street address
   - no CSS or JS uses perspective, rotate, or 3D transforms
@@ -80,6 +81,17 @@ def main() -> int:
         hits = re.findall(pattern, haystack, flags=re.I)
         check(not hits, f"no fabricated contact: {label}", ", ".join(map(str, hits[:3])))
 
+    # A hero_only link (a logo such as IFC) shows only in the hero.
+    def region(name: str) -> str:
+        m = re.search(rf"<!-- render:{name} -->(.*?)<!-- /render:{name} -->", html, re.S)
+        return m.group(1) if m else ""
+    hero_only = [l["url"] for l in profile.get("links", []) if l.get("hero_only")]
+    leaks = [u for u in hero_only if u not in region("hero") or u in region("footer-links") or u in region("print")]
+    check(not leaks, "links: hero-only logo links show in the hero only", ", ".join(leaks))
+    logos = [l["logo"] for l in profile.get("links", []) if l.get("logo")]
+    absent = [g for g in logos if not any((PUBLIC / "icons" / f"{g}-logo-mask.{x}").exists() for x in ("svg", "png"))]
+    check(not absent, "links: every logo link has its mask file in public/icons", ", ".join(absent))
+
     code = {p.name: p.read_text(encoding="utf-8") for p in [PUBLIC / "styles.css", *sorted((PUBLIC / "js").glob("*.js"))]}
     banned = r"(perspective|rotate[XYZ3]?\s*\(|rotate\s*:|matrix3d|translate3d|translateZ|preserve-3d|backface-visibility)"
     hits = [f"{n}:{m.group(0)}" for n, src in code.items() for m in re.finditer(banned, src)]
@@ -107,6 +119,16 @@ def main() -> int:
     else:
         print("NOTE  source: public/character.mp4 absent (not needed to serve the site)")
     check((PUBLIC / "assets/lily/lily_stylized_approved.png").exists(), "fallback: approved portrait present")
+
+    lock_path = PUBLIC / "edit/lock.json"
+    lock = json.loads(lock_path.read_text(encoding="utf-8")) if lock_path.exists() else {}
+    check(bool(lock.get("verifier", {}).get("hash")) and lock.get("kdf", {}).get("iterations", 0) >= 600000,
+          "editor: lock.json has a PBKDF2 password hash (600000 iterations or more)")
+    sealed = (lock.get("publish") or {}).get("sealed")
+    check(sealed is None or set(sealed) == {"salt", "iv", "data"}, "editor: the token is only in sealed form")
+    plain = [str(p.relative_to(ROOT)) for p in PUBLIC.rglob("*") if p.is_file() and p.suffix in {".html", ".js", ".json", ".css"}
+             and re.search(r"(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})", p.read_text(encoding="utf-8", errors="ignore"))]
+    check(not plain, "editor: no plain GitHub token in public/", ", ".join(plain))
 
     print(f"\n{'all static checks passed' if failures == 0 else f'{failures} static check(s) failed'}")
     return failures

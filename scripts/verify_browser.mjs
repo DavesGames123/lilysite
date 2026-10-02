@@ -342,6 +342,45 @@ try {
   // 9. Full desktop page
   await open(BASE, { width: 1440, height: 900 });
   await shot("desktop-full", true);
+  // 10. Editor: the switch, the password gate, live edits, and click-to-edit.
+  // The password comes from EDIT_PASSWORD, so it never enters the repository.
+  const PASS = process.env.EDIT_PASSWORD;
+  if (!PASS) {
+    console.log("SKIP  editor checks — set EDIT_PASSWORD to run them");
+  } else {
+    await open(BASE, { width: 1440, height: 900 });
+    await evaluate(`document.getElementById("edit-switch").click()`);
+    const dialog = await waitFor(() => evaluate(`Boolean(document.querySelector("dialog.ed-dialog[open]"))`), 3000);
+    check(dialog, "editor: the switch opens the password dialog");
+    const tryPassword = (pw) => evaluate(`(() => { const i = document.getElementById("ed-password"); i.value = ${JSON.stringify(pw)}; i.form.requestSubmit(); return true; })()`);
+    await tryPassword("not-the-password");
+    const wrong = await waitFor(async () => { const t = await evaluate(`document.querySelector(".ed-dialog-msg")?.textContent`); return /not correct/.test(t || "") ? t : null; }, 8000);
+    const lockedOut = await evaluate(`!document.body.classList.contains("is-editing") && !document.querySelector(".editor-panel")`);
+    check(Boolean(wrong) && lockedOut, "editor: a wrong password does not open the editor", wrong || "");
+    await tryPassword(PASS);
+    const editing = await waitFor(() => evaluate(`document.body.classList.contains("is-editing") && Boolean(document.querySelector(".editor-panel"))`), 8000);
+    check(editing, "editor: the correct password opens edit mode");
+    const sw = await evaluate(`document.getElementById("edit-switch").getAttribute("aria-checked")`);
+    check(sw === "true", "editor: the switch reports aria-checked=true", sw);
+    await evaluate(`(() => { const f = document.querySelector('[data-path="statement"]'); f.value = "Edited statement for the check."; f.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+    const live = await waitFor(() => evaluate(`document.querySelector(".hero-statement")?.textContent === "Edited statement for the check."`), 2000);
+    check(live, "editor: a field edit re-renders the page at once");
+    // The published entry count, so the check works with or without experience entries.
+    const jobs = await evaluate(`JSON.parse(document.getElementById("profile-data").textContent).experience.length`);
+    await evaluate(`document.querySelector('.ed-section:nth-of-type(4) > .ed-list > .ed-add').click()`);
+    await evaluate(`(() => { const f = document.querySelector('[data-path="experience.${jobs}.role"]'); f.value = "Check Entry Role"; f.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+    const added = await waitFor(() => evaluate(`[...document.querySelectorAll("#experience .entry-role")].length === ${jobs + 1} && [...document.querySelectorAll("#experience .entry-role")].at(-1).textContent === "Check Entry Role" && [...document.querySelectorAll(".site-nav a")].some(a => a.hash === "#experience")`), 2000);
+    check(added, "editor: an added experience entry renders in the section, with its nav link", `published entries=${jobs}`);
+    const focusPath = await evaluate(`(() => { document.querySelector('.edu-school[data-edit]').dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); return document.activeElement?.dataset.path; })()`);
+    check(focusPath === "education.0.school", "editor: a click on page text focuses its field", String(focusPath));
+    const draft = await evaluate(`JSON.parse(localStorage.getItem("lilysite-draft")).statement`);
+    check(draft === "Edited statement for the check.", "editor: the draft is kept in localStorage");
+    await shot("desktop-editor");
+    await evaluate(`document.querySelector(".ed-close").click()`);
+    const restored = await evaluate(`!document.body.classList.contains("is-editing") && document.querySelector(".hero-statement").textContent !== "Edited statement for the check." && document.querySelectorAll("#experience .entry-role").length === ${jobs}`);
+    check(restored, "editor: closing shows the published page again");
+    await evaluate(`localStorage.removeItem("lilysite-draft")`);
+  }
 } catch (error) {
   failures += 1;
   console.log(`FAIL  harness error — ${error.message}`);
