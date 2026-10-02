@@ -1,6 +1,8 @@
 # Build and deploy lilykubala.com to GitHub Pages.
-# The job runs the static checks, builds dist/ (only the files the page uses),
-# and publishes dist/. Requires Settings > Pages > Source = "GitHub Actions".
+# The job renders content/profile.json into the page, runs the static checks,
+# builds dist/ (only the files the page uses), and publishes dist/.
+# The render step comes first, because the site editor commits only
+# content/profile.json. Requires Settings > Pages > Source = "GitHub Actions".
 name: pages
 
 on:
@@ -25,7 +27,12 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Static checks (facts, contact, transforms, frames)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Render profile.json into index.html
+        run: node scripts/render_content.mjs
+      - name: Static checks (facts, contact, transforms, frames, editor lock)
         run: python3 scripts/check_site.py
       - name: Build dist/
         run: bash scripts/build_dist.sh
