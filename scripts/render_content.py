@@ -154,94 +154,84 @@ def render_skills(data: dict) -> str:
 
 
 def render_print(data: dict) -> str:
-    """Two-page US Letter résumé. Only @media print shows this block."""
+    """The printed résumé. Only @media print shows this block.
+
+    The layout flows: the browser makes as many US Letter pages as the content
+    needs, and no page prints empty. The red card (skills, honors, links)
+    floats at the right of the main column. No element depends on a fixed page
+    height or on @page margins, so the sheet prints the same in Chrome, Safari,
+    and Firefox.
+    """
     first, _, last = data["name"].partition(" ")
-    about = "".join(f"<span>{e(p.strip())}</span>" for p in data["about"].split("|"))
-    jobs = []
-    for job in data["experience"]:
-        meta = " · ".join(x for x in (job["type"], job["location"]) if x)
-        pts = "".join(f"<li>{e(p)}</li>" for p in job["points"])
+    about_parts = [p.strip() for p in data["about"].split("|")]
+    about = "".join(f"<span>{e(p)}</span>" for p in about_parts)
+    li = lambda items: "".join(f"<li>{e(x)}</li>" for x in items if x)
+
+    def entry(job: dict) -> str:
+        meta = " · ".join(x for x in (job.get("type", ""), job.get("location", "")) if x)
         skills = ""
-        if job["skills"]:
+        if job.get("skills"):
             skills = f'<p class="ps-skills-shown">Skills shown: {e(", ".join(job["skills"]))}</p>'
-        jobs.append(
-            '<li class="ps-job">'
+        return (
+            '<li class="ps-entry">'
             f'<p class="ps-dates">{e(job["dates"])}</p>'
-            '<div>'
+            "<div>"
             f'<h3 class="ps-role">{e(job["role"])}</h3>'
             f'<p class="ps-org">{e(job["organization"])}</p>'
             + (f'<p class="ps-meta">{e(meta)}</p>' if meta else "")
-            + (f'<ul class="ps-points">{pts}</ul>' if pts else "")
+            + (f'<ul class="ps-points">{li(job["points"])}</ul>' if job.get("points") else "")
             + skills
             + "</div></li>"
         )
+
     edu = data["education"]
-    vols = "".join(
-        '<li class="ps-job ps-vol">'
-        f'<p class="ps-dates">{e(v["dates"])}</p>'
-        '<div>'
-        f'<h3 class="ps-role">{e(v["role"])}</h3>'
-        f'<p class="ps-org">{e(v["organization"])}</p>'
-        f'<ul class="ps-points">{"".join(f"<li>{e(p)}</li>" for p in v["points"])}</ul>'
+    school = (
+        '<li class="ps-entry">'
+        f'<p class="ps-dates">{e(edu["dates"])}</p>'
+        "<div>"
+        f'<h3 class="ps-role">{e(edu["school"])}</h3>'
+        f'<p class="ps-org">{e(" · ".join(edu["studies"]))}</p>'
+        f'<ul class="ps-points">{li(edu["details"])}</ul>'
         "</div></li>"
-        for v in data["volunteering"]
     )
+    jobs = "".join(entry(j) for j in data["experience"])
+    vols = "".join(entry(v) for v in data["volunteering"])
     links = "".join(
         f'<li><span class="ps-side-k">{e(l["label"])}</span>{e(l["url"].replace("https://www.", "").rstrip("/"))}</li>'
         for l in data.get("links", []) if not l.get("hero_only")
     )
     focus = "".join(f"<li>{e(f)}</li>" for f in data["focus"])
-    skills = "".join(f"<li>{e(x)}</li>" for x in data["skills"])
-    honors = "".join(f"<li>{e(x)}</li>" for x in data["honors"])
     return f"""<section class="print-sheet" aria-hidden="true">
-  <article class="ps-page">
-    <header class="ps-head">
-      <div class="ps-head-text">
-        <p class="ps-kicker">{e(data["title"])}</p>
-        <h2 class="ps-name">{e(first)} <em>{e(last)}</em></h2>
-        <p class="ps-about">{about}</p>
-      </div>
-      <div class="ps-photo"><img src="/center.webp" alt="" /></div>
-    </header>
-    <div class="ps-facts">
-      <div><p class="ps-label">Current</p><p>{e(data["current"]["organization"])}<br /><span class="ps-soft">{e(data["current"]["parent"])}</span></p></div>
-      <div><p class="ps-label">Focus</p><ul>{focus}</ul></div>
-      <div><p class="ps-label">Education</p><p>{e(edu["school"])}<br /><span class="ps-soft">{e(" · ".join(edu["studies"]))}</span></p></div>
+  <header class="ps-head">
+    <div class="ps-head-text">
+      <p class="ps-kicker">{e(data["title"])}</p>
+      <h2 class="ps-name">{e(first)} <em>{e(last)}</em></h2>
+      <p class="ps-about">{about}</p>
     </div>
-    <h2 class="ps-section">Experience</h2>
-    <ol class="ps-list">{"".join(jobs)}</ol>
-    <footer class="ps-foot"><span>{e(data["name"])} — {e(data["title"])}</span><span>1 / 2</span></footer>
-  </article>
-  <article class="ps-page ps-page-2">
-    <div class="ps-main">
-      <h2 class="ps-section ps-section-first">Education</h2>
-      <div class="ps-edu">
-        <p class="ps-dates">{e(edu["dates"])}</p>
-        <div>
-          <h3 class="ps-role">{e(edu["school"])}</h3>
-          <p class="ps-org">{e(" · ".join(edu["studies"]))}</p>
-          <ul class="ps-points">{"".join(f"<li>{e(d)}</li>" for d in edu["details"])}</ul>
-        </div>
-      </div>
-      <h2 class="ps-section">Volunteering</h2>
-      <ol class="ps-list">{vols}</ol>
-      <div class="ps-closing">
-        <p class="ps-label">Focus</p>
-        <p class="ps-closing-text">{"<br />".join(e(p.strip()) for p in data["about"].split("|"))}</p>
-      </div>
-    </div>
+    <div class="ps-photo"><img src="/center.webp" alt="" /></div>
+  </header>
+  <div class="ps-facts">
+    <div><p class="ps-label">Current</p><p>{e(data["current"]["organization"])}<br /><span class="ps-soft">{e(data["current"]["parent"])}</span></p></div>
+    <div><p class="ps-label">Focus</p><ul>{focus}</ul></div>
+    <div><p class="ps-label">Education</p><p>{e(edu["school"])}<br /><span class="ps-soft">{e(" · ".join(edu["studies"]))}</span></p></div>
+  </div>
+  <div class="ps-body">
     <aside class="ps-side">
-      <p class="ps-side-name">{e(first)}<br /><em>{e(last)}</em></p>
       <h2 class="ps-side-h">Skills</h2>
-      <ul class="ps-side-list">{skills}</ul>
+      <ul class="ps-side-list">{li(data["skills"])}</ul>
       <h2 class="ps-side-h">Honors</h2>
-      <ul class="ps-side-list ps-side-italic">{honors}</ul>
+      <ul class="ps-side-list ps-side-italic">{li(data["honors"])}</ul>
       <h2 class="ps-side-h">Online</h2>
       <ul class="ps-side-links">{links}</ul>
-      <div class="ps-side-photo"><img src="/center.webp" alt="" /></div>
     </aside>
-    <footer class="ps-foot"><span>{e(data["name"])} — {e(data["title"])}</span><span>2 / 2</span></footer>
-  </article>
+    <h2 class="ps-section">Experience</h2>
+    <ol class="ps-list">{jobs}</ol>
+    <h2 class="ps-section">Education</h2>
+    <ol class="ps-list">{school}</ol>
+    <h2 class="ps-section">Volunteering</h2>
+    <ol class="ps-list">{vols}</ol>
+  </div>
+  <footer class="ps-foot">{e(data["name"])} — {e(data["title"])} · lilykubala.com</footer>
 </section>"""
 
 
