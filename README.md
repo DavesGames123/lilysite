@@ -52,12 +52,18 @@ The red behind her is a studio arch: a soft CSS arch in the exact red of the vid
 
 ## Print
 
-"Print résumé" (`window.print()`) prints a two-page US Letter résumé, not the screen layout. `render_content.py` writes the `.print-sheet` block from `profile.json`. Only `@media print` shows it.
+"Print résumé" (`window.print()`) prints a US Letter résumé, not the screen layout. `render_content.py` writes the `.print-sheet` block from `profile.json`. Only `@media print` shows it.
 
-- Page 1: the name, the about line, a headshot from `center.webp`, the profile facts, and the experience timeline.
-- Page 2: education, volunteering, and a red panel with skills, honors, LinkedIn, and the full portrait.
+The sheet flows. The browser makes as many pages as the content needs, and the current content fills 2 pages. The order is the header with the headshot, the profile facts, then experience, education, and volunteering. A red card with skills, honors, and LinkedIn floats at the right of the experience.
 
-`verify_browser.mjs` prints the page to PDF and checks that it has exactly 2 pages.
+The sheet has no fixed page height and needs no `@page` margins. For this reason, it prints the same in Chrome, Safari, and Firefox, and with any margin in the print dialog. The sheet uses no CSS mask, because WebKit prints a masked image as a black box.
+
+`verify_browser.mjs` prints the page to PDF in Chrome. It checks that the PDF has 1 or 2 pages and that the print sheet has no masked element. To see the Safari result, run `scripts/print_webkit.swift`:
+
+```bash
+swiftc -O -o /tmp/print_webkit scripts/print_webkit.swift
+/tmp/print_webkit http://localhost:4173/ /tmp/resume-webkit.pdf
+```
 
 ## Links
 
