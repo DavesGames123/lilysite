@@ -505,3 +505,10 @@ html::after {
 }
 .link-logo-ifc:hover, .link-logo-ifc:focus-visible { color: #00aeef; transform: translateY(-2px); }
 .link-sep { align-self: stretch; width: 1px; background: rgba(246, 239, 227, 0.4); margin: 4px 0; }
+
+/* ---------- one-column sections ----------
+   render.js leaves out an empty section: volunteering with no entries, or a
+   skills grid with no honors. The remaining column keeps a readable width. */
+.section-split-one { grid-template-columns: minmax(0, 760px); }
+.skills-grid-one { grid-template-columns: 1fr; }
+.edu + .edu { margin-top: 56px; }

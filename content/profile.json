@@ -1,16 +1,37 @@
 {
   "name": "Lily Kubala",
   "title": "Communications Consultant",
-  "about": "Communications Consultant | International Development | Cooperative Development | World Bank Group",
-  "focus": [
-    "International development",
-    "Communications",
-    "Cooperative development"
+  "statement": "Communications consultant focused on international development and cooperative development. Currently a consultant with the International Finance Corporation (IFC), part of the World Bank Group.",
+  "about": [
+    "Communications Consultant",
+    "International Development",
+    "Cooperative Development",
+    "World Bank Group"
   ],
-  "current": {
-    "organization": "International Finance Corporation (IFC)",
-    "parent": "World Bank Group"
+  "headline": {
+    "text": "Communications in international",
+    "emphasis": "& cooperative development."
   },
+  "facts": [
+    {
+      "label": "Current",
+      "value": "International Finance Corporation (IFC)",
+      "sub": "World Bank Group"
+    },
+    {
+      "label": "Focus",
+      "items": [
+        "International development",
+        "Communications",
+        "Cooperative development"
+      ]
+    },
+    {
+      "label": "Education",
+      "value": "University of Southern California",
+      "sub": "International Relations · Middle East Studies"
+    }
+  ],
   "links": [
     {
       "label": "IFC",
@@ -26,13 +47,40 @@
       "source": "supplied by the site owner"
     }
   ],
+  "sections": {
+    "profile": {
+      "label": "Profile",
+      "title": "Profile",
+      "nav": "Profile"
+    },
+    "experience": {
+      "label": "Career",
+      "title": "Experience",
+      "nav": "Experience"
+    },
+    "education": {
+      "label": "Study",
+      "title": "Education",
+      "nav": "Education"
+    },
+    "volunteering": {
+      "label": "Service",
+      "title": "Volunteering",
+      "nav": "Volunteering"
+    },
+    "skills": {
+      "label": "Capabilities",
+      "title": "Skills & honors",
+      "nav": "Skills"
+    }
+  },
   "experience": [
     {
       "role": "Consultant",
       "organization": "IFC (International Finance Corporation)",
       "type": "Contract",
-      "dates": "Sep 2024 – Present",
       "location": "",
+      "dates": "Sep 2024 – Present",
       "points": [],
       "skills": []
     },
@@ -40,8 +88,8 @@
       "role": "Intern",
       "organization": "U.S. Overseas Cooperative Development Council (OCDC)",
       "type": "Internship",
-      "dates": "Sep 2023 – Present",
       "location": "Washington, DC · Remote",
+      "dates": "Sep 2023 – Present",
       "points": [
         "Researched, compiled, and organized a database of videos about Cooperative Development"
       ],
@@ -54,8 +102,8 @@
       "role": "Legal Policy Intern",
       "organization": "International Cooperative Alliance",
       "type": "",
-      "dates": "Jun 2023 – Jul 2023",
       "location": "Brussels · On-site",
+      "dates": "Jun 2023 – Jul 2023",
       "points": [
         "Worked on website design, including creation of graphics and organization of content",
         "Researched news and legal documentation to create a database for cooperatives worldwide",
@@ -68,28 +116,30 @@
       "role": "Assistant File Clerk",
       "organization": "Pahl & McCay",
       "type": "",
-      "dates": "Jun 2021 – Aug 2021",
       "location": "Santa Monica, California",
+      "dates": "Jun 2021 – Aug 2021",
       "points": [
         "Organized packets of documents and filed them"
       ],
       "skills": []
     }
   ],
-  "education": {
-    "school": "University of Southern California",
-    "dates": "2020 – 2024",
-    "studies": [
-      "International Relations",
-      "Middle East Studies"
-    ],
-    "details": [
-      "GPA: 3.7",
-      "Alpha Lambda Delta Honor Society",
-      "Trustee Scholarship recipient; awarded to 100 students",
-      "Dean’s List"
-    ]
-  },
+  "education": [
+    {
+      "school": "University of Southern California",
+      "dates": "2020 – 2024",
+      "studies": [
+        "International Relations",
+        "Middle East Studies"
+      ],
+      "details": [
+        "GPA: 3.7",
+        "Alpha Lambda Delta Honor Society",
+        "Trustee Scholarship recipient; awarded to 100 students",
+        "Dean’s List"
+      ]
+    }
+  ],
   "volunteering": [
     {
       "role": "Senior Coalition Coordinator, Charlotte Chapter",
@@ -121,5 +171,13 @@
   ],
   "honors": [
     "Girl Scout Silver Award"
-  ]
+  ],
+  "site": {
+    "domain": "lilykubala.com",
+    "description": "Lily Kubala, Communications Consultant with the International Finance Corporation (IFC), World Bank Group. International development and cooperative development.",
+    "share": "Communications Consultant with the International Finance Corporation (IFC), World Bank Group. International development and cooperative development.",
+    "employer": "International Finance Corporation (IFC)",
+    "employer_parent": "World Bank Group",
+    "image_version": 1
+  }
 }

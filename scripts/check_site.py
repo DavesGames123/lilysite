@@ -50,15 +50,15 @@ def strings(value) -> list[str]:
 
 
 def main() -> int:
-    render = subprocess.run([sys.executable, str(ROOT / "scripts/render_content.py"), "--check"], capture_output=True, text=True)
+    render = subprocess.run(["node", str(ROOT / "scripts/render_content.mjs"), "--check"], capture_output=True, text=True)
     check(render.returncode == 0, "content: index.html matches content/profile.json", render.stdout.strip())
 
     html = (PUBLIC / "index.html").read_text(encoding="utf-8")
     text = page_text(html)
     profile = json.loads((ROOT / "content/profile.json").read_text(encoding="utf-8"))
-    facts = [s for s in strings({k: v for k, v in profile.items() if k not in ("about", "links")})]
+    # Section and nav names of empty sections and the site block do not show as page text.
+    facts = strings({k: v for k, v in profile.items() if k not in ("links", "sections", "site")})
     facts += [link["label"] for link in profile.get("links", [])]
-    facts += [p.strip() for p in profile["about"].split("|")]
     missing = [f for f in facts if f not in text]
     check(not missing, f"content: all {len(facts)} profile strings show on the page", "; ".join(missing))
 

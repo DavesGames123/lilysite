@@ -1,0 +1,6 @@
+{
+  "name": "lilysite",
+  "private": true,
+  "type": "module",
+  "description": "Lily Kubala résumé site. No npm dependencies; package.json only marks public/js as ES modules for Node."
+}
